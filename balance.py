@@ -4,14 +4,12 @@ import time
 import os
 
 import numpy as np
-#import cv2
-from scipy import spatial
 
-from labvision import camera, images
+from labvision import camera
 from labvision.camera.camera_config import CameraType
 from labvision.images.cropmask import viewer
 from labequipment import arduino, stepper, shaker
-from labvision.images import mask_polygon, Displayer, apply_mask, threshold, bgr_to_gray, gaussian_blur, draw_circle
+from labvision.images import mask_polygon, Displayer, apply_mask, threshold, gaussian_blur, draw_circle
 from scipy.optimize import minimize
 
 STEPPER_CONTROL = "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_5573532393535190E022-if00"
@@ -159,6 +157,9 @@ Measurement functions
 def measure_com(cam, pts, shaker):
     """Measurement_com is the central bit to the process
 
+    It is passed to the level method of balance and called to obtain coords of the level. Level minimises
+    the difference between this output and centre of the tray.
+
     Parameters
     ----------
     cam : A camera object with method get_frame which returns an image
@@ -183,15 +184,14 @@ def measure_com(cam, pts, shaker):
 
 
 if __name__ == "__main__":
-    #pass
+    #setup external objects
     myshaker = shaker.Shaker()
     myshaker.start_serial()
     myshaker.init_duty(val=500)
-
-
     motors=StepperXY()
     cam=camera.Camera(cam_type=CameraType.PANASONICHCX1000)
 
+    #Level the system
     balancer = Balancer(myshaker, cam, motors)
     balancer.level(measure_com, iterations=10, tolerance=0.01)
 
