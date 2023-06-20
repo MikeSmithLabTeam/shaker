@@ -12,8 +12,8 @@ from labequipment import arduino, stepper, shaker
 from labvision.images import mask_polygon, Displayer, apply_mask, threshold, gaussian_blur, draw_circle
 from scipy.optimize import minimize
 
-STEPPER_CONTROL = "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_5573532393535190E022-if00"
-
+#STEPPER_CONTROL = "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_5573532393535190E022-if00"
+STEPPER_CONTROL = "COM3"
 
 class Balancer:
     def __init__(self, shaker, camera, motors,  shape='polygon'):# shaker, camera, motors, centre_pt_fn, shape='hexagon'):
@@ -105,26 +105,50 @@ Setup external objects
 ----------------------------------------------------------------------------------------------------------------------"""
 
 class StepperXY(stepper.Stepper):
-    def __init__(self, port = STEPPER_CONTROL, motor_pos_file='C:\\Users\ppyol1\Documents\shaker\Motor_Positions.txt'):
-        ard = arduino.Arduino(port)
+    """
+    Controls stepper motors to change X,Y.
+
+    ----Params:----
+
+    ard - Instance of Arduino from arduino
+    motor_pos_file - file path to txt file containing relative positions of stepper motors
+
+    
+    ----Example Usage: ----
+        
+    with arduino.Arduino('COM3') as ard:
+        motor = StepperXY(ard)
+        motor.movexy(1000, 0)
+
+    Moves stepper motors.
+
+    """
+
+
+
+
+    def __init__(self, ard, motor_pos_file='C:/Users/ppyol1/Documents/shaker/Motor_Positions.txt'):
+        self.motor_pos_file = motor_pos_file
         super().__init__(ard)
         
         # read initial positions from file and put in self.x and self.y
-        with open(motor_pos_file) as file:
+        with open(motor_pos_file, 'r') as file:
             motor_data = file.read()
         
         motor_data = motor_data.split(",")
         self.x = int(motor_data[0])
         self.y = int(motor_data[1])
         
-    def movexy(self, dx : int, dy: int, motor_pos_file='C:\\Users\ppyol1\Documents\shaker\Motor_Positions.txt'):
+    def movexy(self, dx : int, dy: int):
         """
         This assumes that the 2 motors are front left and right. dY requires moving both in same direction. 
         dX requires moving in opposite direction. dx and dy are measured in steps.
         Motor_pos_file is path to file in which relative stepper motor positions are stored.
         """
+        
         motor1_steps = dx - dy
         motor2_steps = dx + dy
+        
         if motor1_steps > 0:
             motor1_dir = '+'
         else:
@@ -143,7 +167,7 @@ class StepperXY(stepper.Stepper):
         #Write positions to file
         string = str(self.x) + "," + str(self.y)
 
-        with open(motor_pos_file, "w") as file:
+        with open(self.motor_pos_file, "w") as file:
             motor_data = file.write(string)
 
 
@@ -202,15 +226,7 @@ def measure_com(cam, pts, shaker):
 
 
 if __name__ == "__main__":
-    #setup external objects
-    myshaker = shaker.Shaker()
-    myshaker.start_serial()
-    myshaker.init_duty(val=500)
-    motors=StepperXY()
-    cam=camera.Camera(cam_type=CameraType.PANASONICHCX1000)
-
-    #Level the system
-    balancer = Balancer(myshaker, cam, motors)
-    balancer.level(measure_com, iterations=10, tolerance=0.01)
-
+    with arduino.Arduino('COM3') as ard:
+        motor = StepperXY(ard)
+        motor.movexy(1000, 0)
 
