@@ -109,19 +109,19 @@ class StepperXY(stepper.Stepper):
         ard = arduino.Arduino(port)
         super().__init__(ard)
         
-        # read initial positions from file and put in self.x and y
+        # read initial positions from file and put in self.x and self.y
         with open(motor_pos_file) as file:
             motor_data = file.read()
-            motor_data = motor_data.split()
-
-        self.x=int(motor_data[0])
-        self.y=int(motor_data[1])
+        
+        motor_data = motor_data.split(",")
+        self.x = int(motor_data[0])
+        self.y = int(motor_data[1])
         
     def movexy(self, dx : int, dy: int, motor_pos_file='C:\\Users\ppyol1\Documents\shaker\Motor_Positions.txt'):
         """
         This assumes that the 2 motors are front left and right. dY requires moving both in same direction. 
-        dX requires moving in opposite direction. dx and dy are measured in steps
-        Motor_pos_file is path to file in which relative stepper motor positions are stored
+        dX requires moving in opposite direction. dx and dy are measured in steps.
+        Motor_pos_file is path to file in which relative stepper motor positions are stored.
         """
         motor1_steps = dx - dy
         motor2_steps = dx + dy
@@ -141,8 +141,11 @@ class StepperXY(stepper.Stepper):
         self.move_motor(2, motor2_steps, motor2_dir)
         
         #Write positions to file
+        string = str(self.x) + "," + str(self.y)
+
         with open(motor_pos_file, "w") as file:
-            motor_data = file.write("x,y\n")
+            motor_data = file.write(string)
+
 
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
