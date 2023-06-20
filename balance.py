@@ -105,13 +105,24 @@ Setup external objects
 ----------------------------------------------------------------------------------------------------------------------"""
 
 class StepperXY(stepper.Stepper):
-    def __init__(self, port = STEPPER_CONTROL):
+    def __init__(self, port = STEPPER_CONTROL, motor_pos_file='C:\\Users\ppyol1\Documents\shaker\Motor_Positions.txt'):
         ard = arduino.Arduino(port)
         super().__init__(ard)
         
-    def movexy(self, dx : int, dy: int):
-        """This assumes that the 2 motors are front left and right. dY requires moving both in same direction. 
-        dX requires moving in opposite direction. dx and dy are measured in steps"""
+        # read initial positions from file and put in self.x and y
+        with open(motor_pos_file) as file:
+            motor_data = file.read()
+            motor_data = motor_data.split()
+
+        self.x=int(motor_data[0])
+        self.y=int(motor_data[1])
+        
+    def movexy(self, dx : int, dy: int, motor_pos_file='C:\\Users\ppyol1\Documents\shaker\Motor_Positions.txt'):
+        """
+        This assumes that the 2 motors are front left and right. dY requires moving both in same direction. 
+        dX requires moving in opposite direction. dx and dy are measured in steps
+        Motor_pos_file is path to file in which relative stepper motor positions are stored
+        """
         motor1_steps = dx - dy
         motor2_steps = dx + dy
         if motor1_steps > 0:
@@ -122,12 +133,16 @@ class StepperXY(stepper.Stepper):
             motor2_dir = '+'
         else:
             motor2_dir = '-'
-        
+
+        self.x += dx
+        self.y += dy
+                
         self.move_motor(1, motor1_steps, motor1_dir)
         self.move_motor(2, motor2_steps, motor2_dir)
         
-
-
+        #Write positions to file
+        with open(motor_pos_file, "w") as file:
+            motor_data = file.write("x,y\n")
 
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
