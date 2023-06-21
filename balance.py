@@ -1,4 +1,3 @@
-
 import datetime
 import time
 import os
@@ -10,7 +9,12 @@ from labvision.camera.camera_config import CameraType
 from labvision.images.cropmask import viewer
 from labequipment import arduino, stepper, shaker
 from labvision.images import mask_polygon, Displayer, apply_mask, threshold, gaussian_blur, draw_circle
-from scipy.optimize import minimize
+#from scipy.optimize import minimize
+from skopt import gp_minimize, gbrt_minimize, forest_minimize #Pip install dev version "pip install git+https://github.com/scikit-optimize/scikit-optimize.git"
+from skopt.plots import plot_convergence, plot_objective, plot_evaluations
+import matplotlib.pyplot as plt
+
+from typing import List, Tuple, Optional
 
 STEPPER_CONTROL = "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_5573532393535190E022-if00"
 
@@ -29,13 +33,22 @@ class Balancer:
         to move the measured and actual centre closer together.
         
         """
+        self.measurement_counter=0
         self.shaker = shaker
         self.motors=motors      
         self.cam = camera
         self.boundary_shape=shape
         #self.centre_fn = centre_pt_fn
-        self.disp = Displayer(self.cam.get_frame())
-        self._find_boundary()
+        img = self.cam.get_frame()
+        self.img=img
+        self.disp = Displayer(img, title=' ')
+        self.pts, self.cx, self.cy  = self._find_boundary()
+        self.track_cost = []
+        plt.ion()
+        fig, self.ax = plt.subplots()
+        self.disp.update_im(self.img)
+        
+        
         
 
     def _find_boundary(self):
@@ -45,57 +58,71 @@ class Balancer:
         im is a grayscale image
         shape can be 'polygon', 'rectangle', 'circle'        
         """
-        img = self.cam.get_frame()
-        self.disp_img = img.copy()
-        self.pts=viewer(img, self.boundary_shape)
-        self.cx, self.cy = find_centre(self.pts)
-        self.disp_img = draw_circle(self.disp_img, self.cx, self.cy, rad=2, color=(0,255,0), thickness=-1)
-        self.disp.update_im(self.disp_img)
+        pts=viewer(self.img, self.boundary_shape)
+        cx, cy = find_centre(pts)
+        return pts, cx, cy
             
-    def _measure(self, measure_fn):
+    def _measure(self, measure_fn, x_motor, y_motor):
         """Take a collection of measurements, calculate current com"""
         xvals = []
         yvals = []
-        for _ in range(self.iterations):
-            x0,y0=measure_fn(self.cam, self.pts, self.shaker)
+        for _ in range(int(self.iterations)):
+            x0,y0=measure_fn(self.cam, self.pts, self.shaker, x_motor, y_motor)
             xvals.append(x0)
             yvals.append(y0)
+            print(self.measurement_counter)
+            self.measurement_counter +=1
         x=np.mean(xvals)
         y=np.mean(yvals)
-        self._update_display((x,y))
-        return x, y        
+        x_fluct = np.std(xvals)
+        y_fluct = np.std(yvals)
+        fluct_mean = (x_fluct**2 + y_fluct**2)**0.5 / np.sqrt(self.iterations)
+
+        colour = (np.random.randint(0,255),np.random.randint(0,255),np.random.randint(0,255))
+        self._update_display((x,y), colour)
+        return x, y, fluct_mean        
     
-    def level(self, measure_fn, iterations=10, tolerance=1e-3):
+    def level(self, measure_fn, bounds : List[Tuple[int, int]], initial_pts : List[Tuple[int, int]]=None, initial_iterations=20, ncalls=50, tolerance=2):
         """Control loop to try and level the shaker. Uses Nelder-Mead method to minimise
         the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
         by moving the motors."""
         #Number of measurements to average to get an estimate of centre of mass of particles
-        self.iterations=iterations
+        self.iterations=initial_iterations
 
-        x_origin=0
-        y_origin=0
-
-        def min_fn(x_motor, y_motor):
-            """Adjust the motor positions to match input"""
-            dx_motor = x_motor-x_origin
-            dy_motor = y_motor-y_origin
-            self.motors.movexy(dx_motor, dy_motor)
+        def min_fn(motor):
+            """Adjust the motor positions to match input""" 
+            self.motors.movexy(motor[0], motor[1])
+            print('motors')
+            print(self.motors.x_motor, self.motors.y_motor)
 
             #Perform a measurement which includes cycling shaker
-            x,y = self._measure(measure_fn)
+            x,y,fluctuations = self._measure(measure_fn, self.motors.x_motor, self.motors.y_motor)
 
             #Work out how far away com is from centre
             cost = ((self.cx - x)**2+(self.cy - y)**2)**0.5
+
+            if (cost > tolerance) & (fluctuations > cost):
+                self.iterations *= 1.5
+                #self.iterations = (self.iterations**0.5 * fluctuations / cost)**2
+                print(self.iterations)
+            self.track_cost.append(cost)
             return cost
         
-        result = minimize(min_fn, np.array([x_origin, y_origin]), method='Nelder-Mead', tol=tolerance)
-        print("System has been levelled: {}".format(result.x))
-        print("Reduce tolerance and increase iterations and rerun to improve accuracy. Recall sig_2_noise scales as sqrt(N)")
+        result_gp = gp_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
+        #result_gp = gbrt_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), initial_point_generator="grid",n_initial_points=10, n_calls=ncalls)
+        
+        return result_gp
 
-    def _update_display(self, point):
-        self.disp_img = draw_circle(self.disp_img, point[0], point[1], rad=2, color=(0,255,0), thickness=-1)        
-        self.disp.update_im(self.disp_img)
+    
 
+    def _update_display(self, point, colour):
+        #Centre
+        self.img = draw_circle(self.img, self.cx, self.cy, rad=5, color=(0,255,0), thickness=-1)
+        #Measurement
+        self.img = draw_circle(self.img, point[0], point[1], rad=3, color=colour, thickness=-1)        
+        self.disp.update_im(self.img)
+        self.ax.plot(self.track_cost)
+        plt.show()
     
 
 
@@ -108,10 +135,14 @@ class StepperXY(stepper.Stepper):
     def __init__(self, port = STEPPER_CONTROL):
         ard = arduino.Arduino(port)
         super().__init__(ard)
+        self.reset_origin()
         
-    def movexy(self, dx : int, dy: int):
+    def movexy(self, x : float, y: float):
         """This assumes that the 2 motors are front left and right. dY requires moving both in same direction. 
         dX requires moving in opposite direction. dx and dy are measured in steps"""
+        dx = int(x-self.x_motor)
+        dy = int(y-self.y_motor)
+        
         motor1_steps = dx - dy
         motor2_steps = dx + dy
         if motor1_steps > 0:
@@ -126,7 +157,12 @@ class StepperXY(stepper.Stepper):
         self.move_motor(1, motor1_steps, motor1_dir)
         self.move_motor(2, motor2_steps, motor2_dir)
         
-
+        self.x_motor += dx
+        self.y_motor += dy
+    
+    def reset_origin(self):
+        self.x_motor=0
+        self.y_motor=0
 
 
 """------------------------------------------------------------------------------------------------------------------------
@@ -148,13 +184,32 @@ def find_com(bw_img):
     print(x, y)
     return x,y
 
+def generate_initial_pts(initial_pts : Optional[List[Tuple[int,int]]]):
+    """Takes 2 points assumed to be upper left and bottom right of centre and generates
+    some initial values to feed to the minimiser"""
+    if initial_pts is None:
+        return None
+    else:
+        xmin = initial_pts[0][0]
+        xmax = initial_pts[1][0]
+        ymin = initial_pts[0][1]
+        ymax = initial_pts[1][1]
 
+        xmid = int((xmin + xmax)/2)
+        ymid = int((ymin + ymax)/2)
+
+        return [(xmin, ymin), (xmin, ymax), (xmax, ymin), (xmax, ymax), (xmid, ymid)]
+    
+def check_convergence(result):
+    plt.figure(1)
+    plot_convergence(result)
+    plt.show()
 
 """------------------------------------------------------------------------------------------------------------------------
 Measurement functions
 --------------------------------------------------------------------------------------------------------------------------"""
 
-def measure_com(cam, pts, shaker):
+def measure_com(cam, pts, shaker, x_motor, y_motor):
     """Measurement_com is the central bit to the process
 
     It is passed to the level method of balance and called to obtain coords of the level. Level minimises
@@ -165,6 +220,8 @@ def measure_com(cam, pts, shaker):
     cam : A camera object with method get_frame which returns an image
     pts : A tuple of x,y coordinates (int) defining the boundary
     shaker : A shaker object that controls the shaker
+
+    x_motor and y_motor are only included to enable the code to be tested.
 
     Returns
     -------
@@ -185,14 +242,15 @@ def measure_com(cam, pts, shaker):
 
 if __name__ == "__main__":
     #setup external objects
-    myshaker = shaker.Shaker()
-    myshaker.start_serial()
-    myshaker.init_duty(val=500)
-    motors=StepperXY()
-    cam=camera.Camera(cam_type=CameraType.PANASONICHCX1000)
+    #myshaker = shaker.Shaker()
+    #myshaker.start_serial()
+    #myshaker.init_duty(val=500)
+    #motors=StepperXY()
+    #cam=camera.Camera(cam_type=CameraType.PANASONICHCX1000)
 
     #Level the system
-    balancer = Balancer(myshaker, cam, motors)
-    balancer.level(measure_com, iterations=10, tolerance=0.01)
-
-
+    #balancer = Balancer(myshaker, cam, motors)
+    #balancer.level(measure_com, bounds, initial_pts, iterations=10, tolerance=0.01)
+    vals = [[-5,5],[5,-5]]
+    pts = generate_initial_pts(vals)
+    print(pts)
