@@ -30,9 +30,9 @@ class Balancer:
         
         """
         self.shaker = shaker
-        self.motors=motors      
+        self.motors = motors      
         self.cam = camera
-        self.boundary_shape=shape
+        self.boundary_shape = shape
         #self.centre_fn = centre_pt_fn
         self.disp = Displayer(self.cam.get_frame())
         self._find_boundary()
@@ -127,7 +127,7 @@ class StepperXY(stepper.Stepper):
 
 
 
-    def __init__(self, ard, motor_pos_file='C:/Users/ppyol1/Documents/shaker/Motor_Positions.txt'):
+    def __init__(self, ard, motor_pos_file='Z:/shaker_config/motor_positions.txt'):
         self.motor_pos_file = motor_pos_file
         super().__init__(ard)
         
