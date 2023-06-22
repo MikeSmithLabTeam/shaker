@@ -2,14 +2,13 @@ import sys
 sys.path.insert(0,'..')
 
 #from . import arduino
-import arduino
+from labequipment import arduino
 import time
 import numpy as np
 
 
 """These values are specific to these devices on the particular computer"""
 SHAKER_ARDUINO_ID = "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_757353034313511092C1-if00"
-SPEAKER_ARDUINO_ID = "/dev/serial/by-id/usb-Arduino_LLC_Arduino_Micro-if00"
 BAUDRATE = 115200
 
 
@@ -32,16 +31,12 @@ class Shaker:
 
     """
 
-    def __init__(self):
-        self.power = arduino.Arduino(
-                            port=SHAKER_ARDUINO_ID,
-                            rate=BAUDRATE,
-                            wait=False)
+    def __init__(self, ard):
+        self.power = ard
         self.power.flush()
-        self.speaker = arduino.Arduino(
-                            port=SPEAKER_ARDUINO_ID,
-                            rate=BAUDRATE,
-                            wait=False)
+      
+
+       
         self.start_serial()
 
     def start_serial(self):
@@ -70,7 +65,7 @@ class Shaker:
         """
         string = 'd{:03}'.format(val)
         self.power.send_serial_line(string)
-        self.speaker.send_serial_line(string[1:])
+        
         self._clear_buffer()
 
     def set_duty_and_record(self, val : int):
@@ -81,7 +76,7 @@ class Shaker:
         """
         string = 'i{:03}'.format(val)
         self.power.send_serial_line(string)
-        self.speaker.send_serial_line(string[1:])
+        
         self._clear_buffer()
 
 
@@ -149,7 +144,7 @@ class Shaker:
     def quit(self):
         self.switch_mode(manual=False)
         self.power.quit_serial()
-        self.speaker.quit_serial()
+        
         print('Shaker communication closed')
 
 
@@ -166,7 +161,6 @@ if __name__ == "__main__":
     def init_duty(self, val):
         string = 'i{:03}'.format(val)
         self.power.send_serial_line(string)
-        self.speaker.send_serial_line(string[1:])
         self._clear_buffer()
 
     """

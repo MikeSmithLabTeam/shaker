@@ -48,16 +48,19 @@ class Balancer:
         fig, self.ax = plt.subplots()
         self.disp.update_im(self.img)
         
-        
-        
-
     def _find_boundary(self):
         """Manually find the the experimental boundary
         This sets the target value of the centre.
         
+        inputs:
         im is a grayscale image
-        shape can be 'polygon', 'rectangle', 'circle'        
+        shape can be 'polygon', 'rectangle', 'circle'
+
+        returns:
+        list of tuples containing xy coordinates of points of hexagon boundary
+        [(x1,y1),(x2,y2).....]        
         """
+
         pts=viewer(self.img, self.boundary_shape)
         cx, cy = find_centre(pts)
         return pts, cx, cy
@@ -151,13 +154,9 @@ class StepperXY(stepper.Stepper):
 
     """
 
-
-
-
     def __init__(self, ard, motor_pos_file='Z:/shaker_config/motor_positions.txt'):
         self.motor_pos_file = motor_pos_file
         super().__init__(ard)
-        self.reset_origin()
         
         # read initial positions from file and put in self.x and self.y
         with open(motor_pos_file, 'r') as file:
