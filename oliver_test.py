@@ -9,7 +9,7 @@ from labequipment.arduino import Arduino
 from labvision.images import threshold, apply_mask, mask_polygon, gaussian_blur
 from balance import find_com, Balancer
 from labvision.camera.camera_config import CameraType
-
+from settings import shaker_arduino, stepper_arduino, MOTOR_POSITIONS
 
 panasonic = CameraType.PANASONICHCX1000
 
@@ -47,7 +47,7 @@ def measure_com(cam, pts, shaker, x_motor, y_motor):
 
 if __name__ =='__main__':
 
-    with Arduino('COM3') as stepper_ard, Arduino('COM4') as shaker_ard:
+    with Arduino(stepper_arduino) as stepper_ard, Arduino(shaker_arduino) as shaker_ard:
         cam = Camera(cam_type=panasonic)
         shaker = Shaker(shaker_ard)
         motors = StepperXY(stepper_ard)
