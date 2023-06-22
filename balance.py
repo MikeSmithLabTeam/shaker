@@ -15,9 +15,9 @@ from skopt.plots import plot_convergence, plot_objective, plot_evaluations
 import matplotlib.pyplot as plt
 
 from typing import List, Tuple, Optional
+from settings import stepper_arduino, MOTOR_POSITIONS
 
-#STEPPER_CONTROL = "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_5573532393535190E022-if00"
-STEPPER_CONTROL = "COM3"
+
 
 class Balancer:
     def __init__(self, shaker, camera, motors,  shape='polygon'):# shaker, camera, motors, centre_pt_fn, shape='hexagon'):
@@ -154,7 +154,7 @@ class StepperXY(stepper.Stepper):
 
     """
 
-    def __init__(self, ard, motor_pos_file='Z:/shaker_config/motor_positions.txt'):
+    def __init__(self, ard, motor_pos_file=MOTOR_POSITIONS):
         self.motor_pos_file = motor_pos_file
         super().__init__(ard)
         
@@ -274,7 +274,7 @@ def measure_com(cam, pts, shaker, x_motor, y_motor):
 
 
 if __name__ == "__main__":
-    with arduino.Arduino('COM3') as ard:
+    with arduino.Arduino(stepper_arduino) as ard:
         motor = StepperXY(ard)
         motor.movexy(1000, 0)
 

@@ -1,15 +1,9 @@
 import sys
 sys.path.insert(0,'..')
 
-#from . import arduino
-from labequipment import arduino
+
 import time
 import numpy as np
-
-
-"""These values are specific to these devices on the particular computer"""
-SHAKER_ARDUINO_ID = "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_757353034313511092C1-if00"
-BAUDRATE = 115200
 
 
 class Shaker:
@@ -33,30 +27,29 @@ class Shaker:
 
     def __init__(self, ard):
         self.power = ard
-        self.power.flush()
-      
-
-       
+        self.power.flush()      
         self.start_serial()
 
     def start_serial(self):
         """Start comms with shaker power supply"""
         self.switch_mode()
-
+       
+    def switch_mode(self, manual=False):
+        """Toggles between manual and computer controlled"""
+        message = self._toggle()
+        currently_manual = manual and ('Manual control enabled' in message)
+        currently_serial = not manual and ('Serial control enabled' in message)
+        state_correct =  currently_manual or currently_serial
+        if not state_correct:
+            self._toggle()
+    
     def _toggle(self):
         self.power.send_serial_line('x')
         time.sleep(0.1)
         lines = self.power.readlines(2)
         message = lines[1]
-        return message
-        
-    def switch_mode(self, manual=False):
-        """Toggles between manual and computer controlled"""
-        message = self._toggle()
-        state_correct = (manual and ('Manual control enabled' in message)) or (not manual and ('Serial control enabled' in message))
-        if not state_correct:
-            self._toggle()
-        
+        print(message)
+        return message        
 
     def set_duty(self, val : int):
         """Set a new value of the duty cycle
@@ -142,7 +135,7 @@ class Shaker:
         self.power.read_all()
 
     def quit(self):
-        self.switch_mode(manual=False)
+        self.switch_mode(manual=True)
         self.power.quit_serial()
         
         print('Shaker communication closed')
