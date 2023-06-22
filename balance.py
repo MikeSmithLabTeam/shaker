@@ -1,17 +1,13 @@
-import datetime
-import time
-import os
-
 import numpy as np
 
 from labvision import camera
 from labvision.camera.camera_config import CameraType
 from labvision.images.cropmask import viewer
-from labequipment import arduino, stepper, shaker
+from labequipment import arduino, stepper
 from labvision.images import mask_polygon, Displayer, apply_mask, threshold, gaussian_blur, draw_circle
 #from scipy.optimize import minimize
-from skopt import gp_minimize, gbrt_minimize, forest_minimize #Pip install dev version "pip install git+https://github.com/scikit-optimize/scikit-optimize.git"
-from skopt.plots import plot_convergence, plot_objective, plot_evaluations
+from skopt import gp_minimize #Pip install dev version "pip install git+https://github.com/scikit-optimize/scikit-optimize.git"
+from skopt.plots import plot_convergence
 import matplotlib.pyplot as plt
 
 from typing import List, Tuple, Optional
@@ -214,7 +210,6 @@ def find_com(bw_img):
     yvals, xvals = np.where(bw_img)
     x = np.mean(xvals)
     y = np.mean(yvals)
-    print(x, y)
     return x,y
 
 def generate_initial_pts(initial_pts : Optional[List[Tuple[int,int]]]):
