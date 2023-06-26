@@ -36,7 +36,7 @@ class StepperXY(stepper.Stepper):
         
         # read initial positions from file and put in self.x and self.y
         with open(motor_pos_file, 'r') as file:
-            motor_data = file.read()
+           motor_data = file.read()
         
         motor_data = motor_data.split(",")
         self.x = int(motor_data[0])
@@ -50,12 +50,12 @@ class StepperXY(stepper.Stepper):
         Motor_pos_file is path to file in which relative stepper motor positions are stored.
         The method closes by updating the current values of the motors self.x and self.y and storing the new positions to a file
         """
-        dx = x - self.x 
+        dx = x - self.x
         dy = y - self.y
 
         motor1_steps = dx - dy
         motor2_steps = dx + dy
-        
+    
         if motor1_steps > 0:
             motor1_dir = '+'
         else:
@@ -67,9 +67,10 @@ class StepperXY(stepper.Stepper):
 
         self.x += dx
         self.y += dy
-        
-        self.move_motor(1, motor1_steps, motor1_dir)
-        self.move_motor(2, motor2_steps, motor2_dir)
+
+        self.move_motor(1, abs(motor1_steps), motor1_dir)
+        time.sleep(5)
+        self.move_motor(2, abs(motor2_steps), motor2_dir)
         
         #Write positions to file
         new_motor_data = str(self.x) + "," + str(self.y)

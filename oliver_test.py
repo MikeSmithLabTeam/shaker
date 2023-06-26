@@ -72,9 +72,8 @@ if __name__ == "__main__":
     #print("System levelled : {}".format(results.x))
 
     with StepperXY() as motors_xy:
-        motors_xy.movexy(500, 0)
+        motors_xy.movexy(1000,0)
 
-    
 # Create a Camera(), Shaker(), Motors()
 #with Arduino(dsljfsjfkdfs) as sakds,sdfdsklfd;
 #img_processing_func
