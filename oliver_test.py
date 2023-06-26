@@ -1,12 +1,12 @@
 import numpy as np
 import cv2
+import time
 from labvision.camera import Camera
 from shaker import Shaker
 from stepperXY import StepperXY
 from labvision.images import threshold, median_blur, apply_mask, mask_polygon, bgr_to_gray
 from balance import find_com, Balancer
 from labvision.camera.camera_config import CameraType
-
 
 panasonic = CameraType.PANASONICHCX1000
 
@@ -38,7 +38,7 @@ def measure_com(cam, pts, shaker):
     """
     #reset everything by raising duty cycle and then ramping down to lower value
     #shaker.change_duty(500)
-    shaker.ramp(500, 300, 1)
+    #shaker.ramp(500, 300, 25)
 
     #take image and analyse to find centre of mass of system
     img = cam.get_frame()
@@ -46,6 +46,7 @@ def measure_com(cam, pts, shaker):
     img_threshold = threshold(median_blur(bw_img, kernel=(3)), value=57, mode=cv2.THRESH_BINARY_INV, configure=False)
     img_masked = apply_mask(img_threshold, mask_polygon(np.shape(img_threshold), pts))
     x0,y0 = find_com(img_masked)
+    time.sleep(0.5)
     return x0, y0
 
 def balance_trial():
@@ -55,7 +56,7 @@ def balance_trial():
         bounds = [(180,870),(200,520)]
         initial_pts = [(180,160),(850,500)]
         
-        shaker.set_duty(500)
+        shaker.set_duty(530)
         #shaker.ramp(100, 500, 25)
         
         
@@ -69,10 +70,12 @@ pts = ((481, 14), (872, 10), (1067, 340), (877, 683), (488, 687), (294, 353))
 
 if __name__ == "__main__":
     #result=balance_trial()
-    #print("System levelled : {}".format(results.x))
+    #print("System levelled : {}".format(result.x))
+
 
     with StepperXY() as motors_xy:
         motors_xy.movexy(1000,0)
+
 
 # Create a Camera(), Shaker(), Motors()
 #with Arduino(dsljfsjfkdfs) as sakds,sdfdsklfd;

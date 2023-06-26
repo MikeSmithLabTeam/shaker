@@ -52,7 +52,7 @@ class StepperXY(stepper.Stepper):
         """
         dx = x - self.x
         dy = y - self.y
-
+        print(dx,dy)
         motor1_steps = dx - dy
         motor2_steps = dx + dy
     
@@ -69,9 +69,14 @@ class StepperXY(stepper.Stepper):
         self.y += dy
 
         self.move_motor(1, abs(motor1_steps), motor1_dir)
-        time.sleep(5)
         self.move_motor(2, abs(motor2_steps), motor2_dir)
         
+        if (dx != 0) or (dy != 0):
+            starting_time = 4.5
+            motor_1_time = 0.016 * abs(motor1_steps)
+            motor_2_time = 0.016 * abs(motor2_steps)
+            time.sleep(starting_time + motor_1_time + motor_2_time)                     
+
         #Write positions to file
         new_motor_data = str(self.x) + "," + str(self.y)
 

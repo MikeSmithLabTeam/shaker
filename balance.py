@@ -60,7 +60,7 @@ class Balancer:
         cx, cy = find_centre(pts)
         return pts, cx, cy
     
-    def level(self, measure_fn, bounds : List[Tuple[int, int]], initial_pts : List[Tuple[int, int]]=None, initial_iterations=20, ncalls=50, tolerance=2):
+    def level(self, measure_fn, bounds : List[Tuple[int, int]], initial_pts : List[Tuple[int, int]]=None, initial_iterations=10, ncalls=50, tolerance=2):
         """Control loop to try and level the shaker. Uses method to minimise
         the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
         by moving the motors."""
@@ -74,6 +74,7 @@ class Balancer:
             else:
                 "Adjust the motor positions to match input"
                 self.motors.movexy(new_xy_coords[0], new_xy_coords[1])
+                
                 #Evaluate new x,y coordinates
                 x,y,fluctuations = self._measure(measure_fn)
 
@@ -118,9 +119,8 @@ class Balancer:
         #Centre
         self.img = draw_circle(self.img, self.cx, self.cy, rad=5, color=(0,255,0), thickness=-1)
         #Measurement
-        self.img = draw_circle(self.img, point[0], point[1], rad=3, color=colour, thickness=-1)        
+        self.img = draw_circle(self.img, point[0], point[1], rad=4, color=colour, thickness=-1)        
         self.disp.update_im(self.img)
-        self.ax.plot(self.track_cost)
         plt.show()
     
 
