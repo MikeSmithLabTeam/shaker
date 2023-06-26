@@ -54,11 +54,13 @@ class FakeMotors:
         self.y_motor = 0
 
 
-def fake_measure_com(cam, pts, shaker, x_motor, y_motor):
+def fake_measure_com(cam, pts, shaker, new_xy_coords):
     """Make up a relationship between motor position and the com of the particles which has one global minimum and add some noise"""
     xc, yc = find_centre(pts)
-    x_result = np.sqrt((50+x_motor-xc)**2) + np.random.normal(scale=10)
-    y_result = np.sqrt((100+y_motor-yc)**2) + np.random.normal(scale=10)
+    x_coord, y_coord = new_xy_coords
+
+    x_result = np.sqrt((50+x_coord-xc)**2) + np.random.normal(scale=10)
+    y_result = np.sqrt((100+y_coord-yc)**2) + np.random.normal(scale=10)
     return x_result, y_result
 
 
@@ -83,7 +85,7 @@ def test_balance():
     initial_pts = [(-50, 0), (50, -50)]
 
     setattr(Balancer, "_find_boundary", patch_find_boundary)
-    bal = Balancer(shaker, cam, motors)
+    bal = Balancer(shaker, cam, motors, test=True)
     result = bal.level(fake_measure_com, bounds,
                        initial_pts=initial_pts, initial_iterations=10, ncalls=40, tolerance=2)
     print(result)

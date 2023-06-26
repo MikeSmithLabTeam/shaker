@@ -1,6 +1,8 @@
 import sys
 sys.path.insert(0,'..')
 
+from labequipment.arduino import Arduino
+from settings import shaker_arduino
 
 import time
 import numpy as np
@@ -25,30 +27,33 @@ class Shaker:
 
     """
 
-    def __init__(self, ard):
-        self.power = ard
-        self.power.flush()      
-        self.start_serial()
+    def __init__(self):
+        self.power = Arduino(shaker_arduino) 
+        self.switch_serial_mode()
 
-    def start_serial(self):
-        """Start comms with shaker power supply"""
-        self.switch_mode()
-       
-    def switch_mode(self, manual=False):
-        """Toggles between manual and computer controlled"""
+    def switch_serial_mode(self):
+        """Put shaker in serial mode"""
         message = self._toggle()
-        currently_manual = manual and ('Manual control enabled' in message)
-        currently_serial = not manual and ('Serial control enabled' in message)
-        state_correct =  currently_manual or currently_serial
-        if not state_correct:
-            self._toggle()
-    
+        #if len(message) < 5:
+        #    message = self._toggle()
+
+        if 'Serial' not in message:
+            time.sleep(0.2)
+            message=self._toggle()
+
+    def switch_manual_mode(self):
+        message = self._toggle()
+        if 'Manual' not in message:
+            time.sleep(0.1)
+            message=self._toggle()
+        
     def _toggle(self):
+        self.power.flush()
+        time.sleep(0.2)
         self.power.send_serial_line('x')
-        time.sleep(0.1)
+        time.sleep(0.2)
         lines = self.power.readlines(2)
         message = lines[1]
-        print(message)
         return message        
 
     def set_duty(self, val : int):
@@ -135,11 +140,17 @@ class Shaker:
         self.power.read_all()
 
     def quit(self):
-        self.switch_mode(manual=True)
+        time.sleep(1)
+        self.switch_manual_mode()
         self.power.quit_serial()
         
         print('Shaker communication closed')
 
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, *args):
+        self.quit()
 
 
 

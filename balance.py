@@ -1,9 +1,5 @@
 import numpy as np
-
-from labvision import camera
-from labvision.camera.camera_config import CameraType
 from labvision.images.cropmask import viewer
-from labequipment import arduino, stepper
 from labvision.images import mask_polygon, Displayer, apply_mask, threshold, gaussian_blur, draw_circle
 #from scipy.optimize import minimize
 from skopt import gp_minimize #Pip install dev version "pip install git+https://github.com/scikit-optimize/scikit-optimize.git"
@@ -11,12 +7,10 @@ from skopt.plots import plot_convergence
 import matplotlib.pyplot as plt
 
 from typing import List, Tuple, Optional
-from settings import stepper_arduino, MOTOR_POSITIONS
-
 
 
 class Balancer:
-    def __init__(self, shaker, camera, motors,  shape='polygon'):# shaker, camera, motors, centre_pt_fn, shape='hexagon'):
+    def __init__(self, shaker, camera, motors,  shape='polygon', test=False):# shaker, camera, motors, centre_pt_fn, shape='hexagon'):
         """Balancer class handles levelling a shaker. 
         
         shaker an instance of Shaker() which controls vibration of shaker
@@ -34,12 +28,17 @@ class Balancer:
         self.motors = motors      
         self.cam = camera
         self.boundary_shape = shape
+        self.test = test
+        
         #self.centre_fn = centre_pt_fn
         img = self.cam.get_frame()
         self.img=img
         self.disp = Displayer(img, title=' ')
         self.pts, self.cx, self.cy  = self._find_boundary()
-        self.track_cost = []
+        
+        #Store datapoints for future use.
+        self.track_levelling = []
+
         plt.ion()
         fig, self.ax = plt.subplots()
         self.disp.update_im(self.img)
@@ -60,13 +59,47 @@ class Balancer:
         pts=viewer(self.img, self.boundary_shape)
         cx, cy = find_centre(pts)
         return pts, cx, cy
+    
+    def level(self, measure_fn, bounds : List[Tuple[int, int]], initial_pts : List[Tuple[int, int]]=None, initial_iterations=20, ncalls=50, tolerance=2):
+        """Control loop to try and level the shaker. Uses method to minimise
+        the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
+        by moving the motors."""
+        #Number of measurements to average to get an estimate of centre of mass of particles
+        self.iterations=initial_iterations
+
+        def min_fn(new_xy_coords):
+            if self.test:
+                #Only called to run test code
+                x,y,fluctuations = self._measure(measure_fn, new_xy_coords)
+            else:
+                "Adjust the motor positions to match input"
+                self.motors.movexy(new_xy_coords[0], new_xy_coords[1])
+                #Evaluate new x,y coordinates
+                x,y,fluctuations = self._measure(measure_fn)
+
+            #Work out how far away com is from centre
+            cost = ((self.cx - x)**2+(self.cy - y)**2)**0.5
+
+            if (cost > tolerance) & (fluctuations > cost):
+                self.iterations *= 1.5
             
-    def _measure(self, measure_fn, x_motor, y_motor):
+            self.track_levelling.append([new_xy_coords[0], new_xy_coords[1], cost])
+            return cost
+        
+        result_gp = gp_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
+        #result_gp = gbrt_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), initial_point_generator="grid",n_initial_points=10, n_calls=ncalls)
+        
+        return result_gp
+
+    def _measure(self, measure_fn, *args):
         """Take a collection of measurements, calculate current com"""
         xvals = []
         yvals = []
         for _ in range(int(self.iterations)):
-            x0,y0=measure_fn(self.cam, self.pts, self.shaker, x_motor, y_motor)
+            if self.test:
+                x0,y0=measure_fn(self.cam, self.pts, self.shaker, args)
+            else:
+                x0,y0=measure_fn(self.cam, self.pts, self.shaker)
             xvals.append(x0)
             yvals.append(y0)
             print(self.measurement_counter)
@@ -80,39 +113,6 @@ class Balancer:
         colour = (np.random.randint(0,255),np.random.randint(0,255),np.random.randint(0,255))
         self._update_display((x,y), colour)
         return x, y, fluct_mean        
-    
-    def level(self, measure_fn, bounds : List[Tuple[int, int]], initial_pts : List[Tuple[int, int]]=None, initial_iterations=20, ncalls=50, tolerance=2):
-        """Control loop to try and level the shaker. Uses Nelder-Mead method to minimise
-        the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
-        by moving the motors."""
-        #Number of measurements to average to get an estimate of centre of mass of particles
-        self.iterations=initial_iterations
-
-        def min_fn(motor):
-            """Adjust the motor positions to match input""" 
-            self.motors.movexy(motor[0], motor[1])
-            print('motors')
-            print(self.motors.x_motor, self.motors.y_motor)
-
-            #Perform a measurement which includes cycling shaker
-            x,y,fluctuations = self._measure(measure_fn, self.motors.x_motor, self.motors.y_motor)
-
-            #Work out how far away com is from centre
-            cost = ((self.cx - x)**2+(self.cy - y)**2)**0.5
-
-            if (cost > tolerance) & (fluctuations > cost):
-                self.iterations *= 1.5
-                #self.iterations = (self.iterations**0.5 * fluctuations / cost)**2
-                print(self.iterations)
-            self.track_cost.append(cost)
-            return cost
-        
-        result_gp = gp_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
-        #result_gp = gbrt_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), initial_point_generator="grid",n_initial_points=10, n_calls=ncalls)
-        
-        return result_gp
-
-    
 
     def _update_display(self, point, colour):
         #Centre
@@ -126,72 +126,7 @@ class Balancer:
 
 
 
-"""-------------------------------------------------------------------------------------------------------------------
-Setup external objects
-----------------------------------------------------------------------------------------------------------------------"""
 
-class StepperXY(stepper.Stepper):
-    """
-    Controls stepper motors to change X,Y.
-
-    ----Params:----
-
-    ard - Instance of Arduino from arduino
-    motor_pos_file - file path to txt file containing relative positions of stepper motors
-
-    
-    ----Example Usage: ----
-        
-    with arduino.Arduino('COM3') as ard:
-        motor = StepperXY(ard)
-        motor.movexy(1000, 0)
-
-    Moves stepper motors.
-
-    """
-
-    def __init__(self, ard, motor_pos_file=MOTOR_POSITIONS):
-        self.motor_pos_file = motor_pos_file
-        super().__init__(ard)
-        
-        # read initial positions from file and put in self.x and self.y
-        with open(motor_pos_file, 'r') as file:
-            motor_data = file.read()
-        
-        motor_data = motor_data.split(",")
-        self.x = int(motor_data[0])
-        self.y = int(motor_data[1])
-        
-    def movexy(self, dx : int, dy: int):
-        """
-        This assumes that the 2 motors are front left and right. dY requires moving both in same direction. 
-        dX requires moving in opposite direction. dx and dy are measured in steps.
-        Motor_pos_file is path to file in which relative stepper motor positions are stored.
-        """
-        
-        motor1_steps = dx - dy
-        motor2_steps = dx + dy
-        
-        if motor1_steps > 0:
-            motor1_dir = '+'
-        else:
-            motor1_dir = '-'
-        if motor2_steps > 0:
-            motor2_dir = '+'
-        else:
-            motor2_dir = '-'
-
-        self.x += dx
-        self.y += dy
-                
-        self.move_motor(1, motor1_steps, motor1_dir)
-        self.move_motor(2, motor2_steps, motor2_dir)
-        
-        #Write positions to file
-        string = str(self.x) + "," + str(self.y)
-
-        with open(self.motor_pos_file, "w") as file:
-            motor_data = file.write(string)
 
 
 """------------------------------------------------------------------------------------------------------------------------
@@ -265,11 +200,4 @@ def measure_com(cam, pts, shaker, x_motor, y_motor):
     bw_img=threshold(gaussian_blur(img[:,:,2], kernel=(5,5)), value=103, configure=False)
     x0,y0 = find_com(bw_img)
     return x0, y0
-
-
-
-if __name__ == "__main__":
-    with arduino.Arduino(stepper_arduino) as ard:
-        motor = StepperXY(ard)
-        motor.movexy(1000, 0)
 
