@@ -2,7 +2,7 @@ import time
 import numpy as np
 from labequipment import stepper
 from labequipment.arduino import Arduino
-from settings import stepper_arduino, MOTOR_POSITIONS
+from settings import stepper_arduino, SETTINGS_PATH
 
 
 """-------------------------------------------------------------------------------------------------------------------
@@ -29,7 +29,8 @@ class StepperXY(stepper.Stepper):
 
     """
 
-    def __init__(self, motor_pos_file=MOTOR_POSITIONS):
+    def __init__(self, motor_pos_file=SETTINGS_PATH+"motor_positions.txt"):
+        print("stepperxt init")
         ard = Arduino(stepper_arduino)
 
         self.motor_pos_file = motor_pos_file

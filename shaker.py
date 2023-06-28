@@ -28,6 +28,7 @@ class Shaker:
     """
 
     def __init__(self):
+        print("shaker init")
         self.power = Arduino(shaker_arduino) 
         self.switch_serial_mode()
 

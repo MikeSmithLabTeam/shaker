@@ -81,12 +81,12 @@ def test_balance():
     shaker = FakeShaker()
     motors = FakeMotors()
 
-    bounds = [(-100, 100), (-100, 100)]
+    dimensions = [(-100, 100), (-100, 100)]
     initial_pts = [(-50, 0), (50, -50)]
 
     setattr(Balancer, "_find_boundary", patch_find_boundary)
     bal = Balancer(shaker, cam, motors, test=True)
-    result = bal.level(fake_measure_com, bounds,
+    result = bal.level(fake_measure_com, dimensions,
                        initial_pts=initial_pts, initial_iterations=10, ncalls=40, tolerance=2)
     print(result)
     print("System has been levelled: {}".format(result.x))

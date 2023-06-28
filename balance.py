@@ -1,13 +1,13 @@
 import numpy as np
+import os
 from labvision.images.cropmask import viewer
 from labvision.images import mask_polygon, Displayer, apply_mask, threshold, gaussian_blur, draw_circle
 #from scipy.optimize import minimize
 from skopt import gp_minimize #Pip install dev version "pip install git+https://github.com/scikit-optimize/scikit-optimize.git"
 from skopt.plots import plot_convergence
 import matplotlib.pyplot as plt
-
+from settings import SETTINGS_PATH
 from typing import List, Tuple, Optional
-
 
 class Balancer:
     def __init__(self, shaker, camera, motors,  shape='polygon', test=False):# shaker, camera, motors, centre_pt_fn, shape='hexagon'):
@@ -61,10 +61,14 @@ class Balancer:
         cx, cy = find_centre(pts)
         return pts, cx, cy
     
-    def level(self, measure_fn, bounds : List[Tuple[int, int]], initial_pts : List[Tuple[int, int]]=None, initial_iterations=10, ncalls=50, tolerance=2):
+    def level(self, measure_fn, dimensions : List[Tuple[int, int]], initial_pts : List[Tuple[int, int]]=None, initial_iterations=10, ncalls=50, tolerance=2):
         """Control loop to try and level the shaker. Uses method to minimise
         the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
-        by moving the motors."""
+        by moving the motors.
+
+        dimensions : List containing tuples [(x,x),(y,y)] where (x,x) describe the upper and lower bounds.
+        initial_pts : List containing tuples [(x,x),(y,y)]
+        """
         #Number of measurements to average to get an estimate of centre of mass of particles
         self.iterations=initial_iterations
 
@@ -88,7 +92,7 @@ class Balancer:
             self.track_levelling.append([new_xy_coords[0], new_xy_coords[1], cost])
             return cost
         
-        result_gp = gp_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
+        result_gp = gp_minimize(min_fn, dimensions, x0=generate_initial_pts(initial_pts), n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
         #result_gp = gbrt_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), initial_point_generator="grid",n_initial_points=10, n_calls=ncalls)
         
         return result_gp
@@ -137,6 +141,7 @@ class Balancer:
         x = range(len(self.track_levelling))
         self.ax.plot(x[-1],self.track_levelling[-1][-1],"r.")
 
+
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
 --------------------------------------------------------------------------------------------------------------------------"""
@@ -155,13 +160,18 @@ def find_com(bw_img):
 
 def generate_initial_pts(initial_pts : Optional[List[Tuple[int,int]]]):
     """Takes 2 points assumed to be upper left and bottom right of centre and generates
-    some initial values to feed to the minimiser"""
+    some initial values to feed to the minimiser
+    
+    initial_pts : List containing tuples. [(x, x), (y, y)]
+    
+    
+    """
     if initial_pts is None:
         return None
     else:
         xmin = initial_pts[0][0]
-        xmax = initial_pts[1][0]
-        ymin = initial_pts[0][1]
+        xmax = initial_pts[0][1]
+        ymin = initial_pts[1][0]
         ymax = initial_pts[1][1]
 
         xmid = int((xmin + xmax)/2)

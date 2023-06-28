@@ -10,5 +10,4 @@ accelerometer_shaker = {"PORT" : "COM8",
                         "BAUDRATE" : 9600
                         }
 
-
-MOTOR_POSITIONS = "Z:/shaker_config/motor_positions.txt"
+SETTINGS_PATH = "Z:/shaker_config/"

@@ -38,7 +38,7 @@ def measure_com(cam, pts, shaker):
     """
     #reset everything by raising duty cycle and then ramping down to lower value
     #shaker.change_duty(500)
-    shaker.ramp(550,300, 50)
+    #shaker.ramp(550,300, 50)
 
     #take image and analyse to find centre of mass of system
     img = cam.get_frame()
@@ -54,17 +54,15 @@ def balance_trial():
     with Shaker() as shaker, StepperXY() as motors:
 
         cam = Camera(cam_type=panasonic)
-        bounds = [(500,900),(100,400)]
-        initial_pts = [(180,160),(850,500)]
+        dimensions = [(500,900),(100,500)]
+        initial_pts = [(600,800),(200,400)]
         
         shaker.set_duty(530)
         
         bal = Balancer(shaker, cam, motors)
-        result = bal.level(measure_com, bounds, initial_pts=initial_pts, initial_iterations=5, ncalls=50, tolerance=2)
+        result = bal.level(measure_com, dimensions, initial_pts=initial_pts, initial_iterations=5, ncalls=50, tolerance=2)
 
     return result
-
-pts = ((481, 14), (872, 10), (1067, 340), (877, 683), (488, 687), (294, 353))
 
 if __name__ == "__main__":
     result=balance_trial()
