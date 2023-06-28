@@ -32,17 +32,18 @@ class Balancer:
         
         #self.centre_fn = centre_pt_fn
         img = self.cam.get_frame()
-        self.img=img
+        self.img = img
         self.disp = Displayer(img, title=' ')
         self.pts, self.cx, self.cy  = self._find_boundary()
         
-        #Store datapoints for future use.
-        self.track_levelling = []
+        #Store datapoints for future use. Track_levelling are a list of x,y motor coords, expt_com is a list of particles C.O.M coords.
+        self.track_levelling = [[0,0,0]]
+        self.expt_com = []
 
         plt.ion()
         fig, self.ax = plt.subplots()
         self.disp.update_im(self.img)
-        
+    
     def _find_boundary(self):
         """Manually find the the experimental boundary
         This sets the target value of the centre.
@@ -101,6 +102,9 @@ class Balancer:
                 x0,y0=measure_fn(self.cam, self.pts, self.shaker, args)
             else:
                 x0,y0=measure_fn(self.cam, self.pts, self.shaker)
+            
+            self.expt_com.append([x0,y0])
+
             xvals.append(x0)
             yvals.append(y0)
             print(self.measurement_counter)
@@ -111,29 +115,31 @@ class Balancer:
         y_fluct = np.std(yvals)
         fluct_mean = (x_fluct**2 + y_fluct**2)**0.5 / np.sqrt(self.iterations)
 
-        colour = (np.random.randint(0,255),np.random.randint(0,255),np.random.randint(0,255))
-        self._update_display((x,y), colour)
+        self._update_plot()
+        self._update_display((x,y))
+
         return x, y, fluct_mean        
 
-    def _update_display(self, point, colour):
+    def _update_display(self, point):
+     
+        self.img = self.cam.get_frame()
+        
         #Centre
         self.img = draw_circle(self.img, self.cx, self.cy, rad=5, color=(0,255,0), thickness=-1)
         #Measurement
-        self.img = draw_circle(self.img, point[0], point[1], rad=4, color=colour, thickness=-1)        
+        for point in self.expt_com:
+            colour = (np.random.randint(0,255),np.random.randint(0,255),np.random.randint(0,255))
+            self.img = draw_circle(self.img, point[0], point[1], rad=4, color=colour, thickness=-1)        
         self.disp.update_im(self.img)
         plt.show()
     
-
-
-
-
-
+    def _update_plot(self):
+        x = range(len(self.track_levelling))
+        self.ax.plot(x[-1],self.track_levelling[-1][-1],"r.")
 
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
 --------------------------------------------------------------------------------------------------------------------------"""
-
-
 def find_centre(pts):
         """Use mask to identify centre of experiment"""
         cx = np.mean([pt[0] for pt in pts])
@@ -188,7 +194,7 @@ def measure_com(cam, pts, shaker, x_motor, y_motor):
 
     Returns
     -------
-    x,y coordinates on the image corresponding ot the centre of mass of the particles. These are floats.
+    x,y coordinates on the image corresponding to the centre of mass of the particles. These are floats.
     """
     #reset everything by raising duty cycle and then ramping down to lower value
     shaker.change_duty(500)
@@ -200,4 +206,3 @@ def measure_com(cam, pts, shaker, x_motor, y_motor):
     bw_img=threshold(gaussian_blur(img[:,:,2], kernel=(5,5)), value=103, configure=False)
     x0,y0 = find_com(bw_img)
     return x0, y0
-

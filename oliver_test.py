@@ -38,7 +38,7 @@ def measure_com(cam, pts, shaker):
     """
     #reset everything by raising duty cycle and then ramping down to lower value
     #shaker.change_duty(500)
-    #shaker.ramp(500, 300, 25)
+    shaker.ramp(550,300, 50)
 
     #take image and analyse to find centre of mass of system
     img = cam.get_frame()
@@ -47,41 +47,30 @@ def measure_com(cam, pts, shaker):
     img_masked = apply_mask(img_threshold, mask_polygon(np.shape(img_threshold), pts))
     x0,y0 = find_com(img_masked)
     time.sleep(0.5)
+
     return x0, y0
 
 def balance_trial():
     with Shaker() as shaker, StepperXY() as motors:
 
         cam = Camera(cam_type=panasonic)
-        bounds = [(180,870),(200,520)]
+        bounds = [(500,900),(100,400)]
         initial_pts = [(180,160),(850,500)]
         
         shaker.set_duty(530)
-        #shaker.ramp(100, 500, 25)
-        
         
         bal = Balancer(shaker, cam, motors)
-        result = bal.level(measure_com, bounds, initial_pts=initial_pts, initial_iterations=10, ncalls=40, tolerance=2)
+        result = bal.level(measure_com, bounds, initial_pts=initial_pts, initial_iterations=5, ncalls=50, tolerance=2)
 
     return result
-
 
 pts = ((481, 14), (872, 10), (1067, 340), (877, 683), (488, 687), (294, 353))
 
 if __name__ == "__main__":
-    #result=balance_trial()
+    result=balance_trial()
     #print("System levelled : {}".format(result.x))
 
-
-    with StepperXY() as motors_xy:
-        motors_xy.movexy(1000,0)
-
-
-# Create a Camera(), Shaker(), Motors()
-#with Arduino(dsljfsjfkdfs) as sakds,sdfdsklfd;
-#img_processing_func
-
-#bounds = [(x,y),()]
-
-#balance = Balancer(cam, shaker, motor)
-#balance.level(img_processing_func)
+    #with StepperXY() as motors_xy:
+        #motors_xy.movexy(9500,9500)
+        #motors_xy.move_motor(1, 1000, "+")
+        #motors_xy.move_motor(2, 500,"-")

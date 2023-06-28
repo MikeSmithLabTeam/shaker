@@ -1,4 +1,5 @@
 import time
+import numpy as np
 from labequipment import stepper
 from labequipment.arduino import Arduino
 from settings import stepper_arduino, MOTOR_POSITIONS
@@ -53,8 +54,8 @@ class StepperXY(stepper.Stepper):
         dx = x - self.x
         dy = y - self.y
         print(dx,dy)
-        motor1_steps = dx - dy
-        motor2_steps = dx + dy
+        motor1_steps = -2 *(dx + dy / np.sqrt(3))
+        motor2_steps = dx
     
         if motor1_steps > 0:
             motor1_dir = '+'
@@ -71,6 +72,7 @@ class StepperXY(stepper.Stepper):
         self.move_motor(1, abs(motor1_steps), motor1_dir)
         self.move_motor(2, abs(motor2_steps), motor2_dir)
         
+        #allowing time for motors to complete action.
         if (dx != 0) or (dy != 0):
             starting_time = 4.5
             motor_1_time = 0.016 * abs(motor1_steps)
