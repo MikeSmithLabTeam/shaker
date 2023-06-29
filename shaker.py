@@ -3,7 +3,6 @@ sys.path.insert(0,'..')
 
 from labequipment.arduino import Arduino
 from settings import shaker_arduino
-
 import time
 import numpy as np
 
@@ -24,9 +23,7 @@ class Shaker:
     into an audio signal that is written into the camera's audio channel. This enables the
     user to extract the acceleration at a later date.
 
-
     """
-
     def __init__(self):
         print("shaker init")
         self.power = Arduino(shaker_arduino) 
@@ -34,16 +31,19 @@ class Shaker:
 
     def switch_serial_mode(self):
         """Put shaker in serial mode"""
-        message = self._toggle()
-        #if len(message) < 5:
-        #    message = self._toggle()
-
+        message = ''
+        while not message:
+            message = self._toggle()
+        
         if 'Serial' not in message:
-            time.sleep(0.2)
+            time.sleep(0.25)
             message=self._toggle()
 
     def switch_manual_mode(self):
-        message = self._toggle()
+        message = ''
+        while not message:
+            message = self._toggle()
+        
         if 'Manual' not in message:
             time.sleep(0.1)
             message=self._toggle()
@@ -97,11 +97,7 @@ class Shaker:
             record (bool, optional): Records entire sequence. Defaults to False.
             stop_at_end (bool, optional): Whether to stop shaker when ramp is complete. The recording will stop regardless. Defaults to False.
         """  
-        if stop > start:
-            duty_cycles = np.arange(start, stop + 1, 1*step_size)
-        else:
-            duty_cycles = np.arange(start, stop - 1, -1*step_size)
-        
+        duty_cycles = np.arange(start, stop + 1, step_size)        
         self.sequence(duty_cycles, rate, record=record, stop_at_end=stop_at_end)
     
     def sequence(self, 
@@ -156,9 +152,15 @@ class Shaker:
 
 
 if __name__ == "__main__":
-    myshaker = Shaker()
-    myshaker.sequence([100,400,500,400], rate=0.1)
-    
+    with Shaker() as myshaker:
+        #myshaker.sequence([100,400,500,400], rate=0.1)
+        myshaker.set_duty(450)
+        time.sleep(5)
+        myshaker.set_duty_and_record(450)
+        time.sleep(2)
+        myshaker.set_duty_and_record(450)
+        time.sleep(5)
+        
 
 
     """

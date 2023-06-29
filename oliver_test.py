@@ -68,7 +68,7 @@ if __name__ == "__main__":
     result=balance_trial()
     #print("System levelled : {}".format(result.x))
 
-    #with StepperXY() as motors_xy:
+   # with StepperXY() as motors_xy:
         #motors_xy.movexy(9500,9500)
-        #motors_xy.move_motor(1, 1000, "+")
+        #motors_xy.move_motor(1, 500, "+")
         #motors_xy.move_motor(2, 500,"-")
