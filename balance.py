@@ -61,7 +61,7 @@ class Balancer:
         cx, cy = find_centre(pts)
         return pts, cx, cy
     
-    def level(self, measure_fn, dimensions : List[Tuple[int, int]], initial_pts : List[Tuple[int, int]]=None, initial_iterations=10, ncalls=50, tolerance=2):
+    def level(self, measure_fn, dimensions : List[Tuple[int, int]]=None, initial_pts : List[Tuple[int, int]]=None, initial_iterations=10, ncalls=50, tolerance=2):
         """Control loop to try and level the shaker. Uses method to minimise
         the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
         by moving the motors.
@@ -92,7 +92,7 @@ class Balancer:
             self.track_levelling.append([new_xy_coords[0], new_xy_coords[1], cost])
             return cost
         
-        result_gp = gp_minimize(min_fn, dimensions, x0=generate_initial_pts(initial_pts), n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
+        result_gp = gp_minimize(min_fn, dimensions, n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
         #result_gp = gbrt_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), initial_point_generator="grid",n_initial_points=10, n_calls=ncalls)
         
         return result_gp
@@ -162,9 +162,7 @@ def generate_initial_pts(initial_pts : Optional[List[Tuple[int,int]]]):
     """Takes 2 points assumed to be upper left and bottom right of centre and generates
     some initial values to feed to the minimiser
     
-    initial_pts : List containing tuples. [(x, x), (y, y)]
-    
-    
+    initial_pts : List containing tuples. [(x, x), (y, y)]    
     """
     if initial_pts is None:
         return None
@@ -177,7 +175,10 @@ def generate_initial_pts(initial_pts : Optional[List[Tuple[int,int]]]):
         xmid = int((xmin + xmax)/2)
         ymid = int((ymin + ymax)/2)
 
-        return [(xmin, ymin), (xmin, ymax), (xmax, ymin), (xmax, ymax), (xmid, ymid)]
+        #initial_pts = [[xmin, xmin, xmax,xmax, xmid],[ymin,ymax, ymin, ymax, ymid]]
+        initial_pts =[[xmin, ymin],[xmax, ymax]]
+        print(initial_pts)
+        return initial_pts
     
 def check_convergence(result):
     plt.figure(1)
