@@ -89,7 +89,6 @@ class Balancer:
             if (cost > tolerance) & (fluctuations > cost):
                 self.iterations *= 1.5
             
-            self.track_levelling.append([new_xy_coords[0], new_xy_coords[1], cost])
             return cost
         
         result_gp = gp_minimize(min_fn, dimensions, x0=generate_initial_pts(initial_pts), n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
@@ -107,7 +106,7 @@ class Balancer:
             else:
                 x0,y0=measure_fn(self.cam, self.pts, self.shaker)
             
-            self.expt_com.append([x0,y0])
+            #self.expt_com.append([x0,y0])
 
             xvals.append(x0)
             yvals.append(y0)
@@ -119,7 +118,13 @@ class Balancer:
         y_fluct = np.std(yvals)
         fluct_mean = (x_fluct**2 + y_fluct**2)**0.5 / np.sqrt(self.iterations)
 
+        self.track_levelling.append([x, y, ((self.cx - x)**2+(self.cy - y)**2)**0.5])
+
         self._update_plot()
+
+        with open(SETTINGS_PATH + 'track_level.txt','a') as f:
+            np.savetxt(f,np.array([self.track_levelling[-1]]))
+        
         self._update_display((x,y))
 
         return x, y, fluct_mean        
@@ -131,8 +136,11 @@ class Balancer:
         #Centre
         self.img = draw_circle(self.img, self.cx, self.cy, rad=5, color=(0,255,0), thickness=-1)
         #Measurement
-        for point in self.expt_com:
-            colour = (np.random.randint(0,255),np.random.randint(0,255),np.random.randint(0,255))
+        for idx, point in enumerate(self.track_levelling):
+            if idx == (len(self.track_levelling)-1):
+                colour = (0,0,255)
+            else:
+                colour = (255,0,0)
             self.img = draw_circle(self.img, point[0], point[1], rad=4, color=colour, thickness=-1)        
         self.disp.update_im(self.img)
         plt.show()
@@ -140,6 +148,9 @@ class Balancer:
     def _update_plot(self):
         x = range(len(self.track_levelling))
         self.ax.plot(x[-1],self.track_levelling[-1][-1],"r.")
+        self.ax.set_title('Levelling progress plot')
+        self.ax.set_xlabel('Iteration')
+        self.ax.set_ylabel('Cost')
 
 
 """------------------------------------------------------------------------------------------------------------------------

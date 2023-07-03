@@ -37,7 +37,7 @@ def measure_com(cam, pts, shaker):
     x,y coordinates on the image corresponding ot the centre of mass of the particles. These are floats.
     """
     #reset everything by raising duty cycle and then ramping down to lower value
-    #shaker.set_duty(530)
+    shaker.set_duty(530)
     #shaker.ramp(250,550,50)
     
 
@@ -52,29 +52,28 @@ def measure_com(cam, pts, shaker):
     return x0, y0
 
 def balance_trial():
-    with Shaker() as shaker, StepperXY() as motors:
-        motors.movexy(300,300)
-        
-        """
+    with Shaker() as shaker, StepperXY() as motors:      
         cam = Camera(cam_type=panasonic)
-        dimensions = [(-2000,2000),(-2000,2000)]
-        initial_pts = [(-1600,-1600),(1600, 1600)]
-        
+        dimensions = [(-4000,-250),(-250,2500)]
+        #initial_pts = [(-1600,500),(-500, 1600)]
+        initial_pts=None
+
         shaker.set_duty(530)
         
         bal = Balancer(shaker, cam, motors)
         result = bal.level(measure_com, dimensions=dimensions, initial_pts=initial_pts, initial_iterations=5, ncalls=50, tolerance=2)
-
-    return result"""
+        #Send stepper motors to result.x, result.y
+        
+    return result
 
 if __name__ == "__main__":
-    #balance_trial()
+    balance_trial()
     #result=balance_trial()
     #print("System levelled : {}".format(result.x))
     
 
-    with StepperXY() as motors_xy:
-        motors_xy.movexy(1000,0)
+    #with StepperXY() as motors_xy:
+    #    motors_xy.movexy(-4000,2500)
         #motors_xy.movexy(800,0)
         #motors_xy.move_motor(1, 500, "+")
         

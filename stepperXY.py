@@ -55,11 +55,11 @@ class StepperXY(stepper.Stepper):
         dx = x - self.x
         dy = y - self.y
 
-        print(dx)
-        print(dy)
-        
-        motor1_steps = int(-np.sqrt(3) *(dy/2 + dx))
-        motor2_steps = int(dx)
+        print('dx : ', dx)
+        print('dy : ', dy)
+ 
+        motor1_steps = int((dx - dy)/2)
+        motor2_steps = int((dx + dy)/2) # The motors move the feet in opposite directions hence sign is opposite to what you expect.
     
         if motor1_steps > 0:
             motor1_dir = '+'
@@ -78,8 +78,8 @@ class StepperXY(stepper.Stepper):
         
         #allowing time for motors to complete action.
         if (dx != 0) or (dy != 0):
-            motor_1_time = 0.016 * abs(motor1_steps)
-            motor_2_time = 0.016 * abs(motor2_steps)
+            motor_1_time = 0.065 * abs(motor1_steps)
+            motor_2_time = 0.065 * abs(motor2_steps)
             time.sleep(motor_1_time + motor_2_time)                     
 
         #Write positions to file
