@@ -153,8 +153,9 @@ class Shaker:
 
 if __name__ == "__main__":
     with Shaker() as myshaker:
+        time.sleep(2)
         #myshaker.sequence([100,400,500,400], rate=0.1)
-        myshaker.set_duty(450)
+        myshaker.set_duty(530)
         #time.sleep(5)
         #myshaker.ramp(100, 550, 10, record=True)
         #time.sleep(2)

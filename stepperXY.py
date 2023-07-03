@@ -32,7 +32,6 @@ class StepperXY(stepper.Stepper):
     def __init__(self, motor_pos_file=SETTINGS_PATH+"motor_positions.txt"):
         print("stepperxy init")
         ard = Arduino(stepper_arduino)
-        print('arduino init')
         self.motor_pos_file = motor_pos_file
         super().__init__(ard)
         
@@ -43,7 +42,7 @@ class StepperXY(stepper.Stepper):
         motor_data = motor_data.split(",")
         self.x = int(motor_data[0])
         self.y = int(motor_data[1])
-        print('finished init')
+        time.sleep(7)
         
     def movexy(self, x : int, y: int):
         """
@@ -59,7 +58,7 @@ class StepperXY(stepper.Stepper):
         print(dx)
         print(dy)
         
-        motor1_steps = int(-2 *(dx + dy / np.sqrt(3)))
+        motor1_steps = int(-np.sqrt(3) *(dy/2 + dx))
         motor2_steps = int(dx)
     
         if motor1_steps > 0:
@@ -79,10 +78,9 @@ class StepperXY(stepper.Stepper):
         
         #allowing time for motors to complete action.
         if (dx != 0) or (dy != 0):
-            starting_time = 4.5
             motor_1_time = 0.016 * abs(motor1_steps)
             motor_2_time = 0.016 * abs(motor2_steps)
-            time.sleep(starting_time + motor_1_time + motor_2_time)                     
+            time.sleep(motor_1_time + motor_2_time)                     
 
         #Write positions to file
         new_motor_data = str(self.x) + "," + str(self.y)
@@ -94,5 +92,5 @@ class StepperXY(stepper.Stepper):
         return self
     
     def __exit__(self, *args):
-        time.sleep(1)
+        time.sleep(2)
         self.ard.quit_serial()

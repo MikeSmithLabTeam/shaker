@@ -73,16 +73,17 @@ if __name__ == "__main__":
     #print("System levelled : {}".format(result.x))
     
 
-    #with StepperXY() as motors_xy:
-        #motors_xy.movexy(1000,0)
+    with StepperXY() as motors_xy:
+        motors_xy.movexy(1000,0)
+        #motors_xy.movexy(800,0)
+        #motors_xy.move_motor(1, 500, "+")
         
-        #motors_xy.move_motor(1, 1000, "+")
         #motors_xy.move_motor(2, 1000,"+")
 
-    from labequipment.arduino import Arduino
-    from settings import stepper_arduino
-    with Arduino(settings=stepper_arduino) as ard:
-        time.sleep(2)
-        ard.send_serial_line("M1+500")
-        time.sleep(2)
+    #from labequipment.arduino import Arduino
+    #from settings import stepper_arduino
+    #with Arduino(settings=stepper_arduino) as ard:
+    #    time.sleep(2)
+    #    ard.send_serial_line("M1+500")
+    #    time.sleep(2)
 
