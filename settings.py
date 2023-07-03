@@ -3,9 +3,8 @@ shaker_arduino = {"PORT" : "COM5",
                   "SERIAL_NUMBER" : "757353034313511092C1"
                  }
 
-stepper_arduino = {"PORT" : "COM3",
-                   "BAUDRATE" : 9600,
-                   "SERIAL_NUMBER" : "5573532393535190E022"
+stepper_arduino = {"PORT" : "COM10",
+                   "BAUDRATE" : 115200
                    }
 
 accelerometer_shaker = {"PORT" : "COM8",

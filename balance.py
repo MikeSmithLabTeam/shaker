@@ -92,7 +92,7 @@ class Balancer:
             self.track_levelling.append([new_xy_coords[0], new_xy_coords[1], cost])
             return cost
         
-        result_gp = gp_minimize(min_fn, dimensions, n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
+        result_gp = gp_minimize(min_fn, dimensions, x0=generate_initial_pts(initial_pts), n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
         #result_gp = gbrt_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), initial_point_generator="grid",n_initial_points=10, n_calls=ncalls)
         
         return result_gp
@@ -175,11 +175,8 @@ def generate_initial_pts(initial_pts : Optional[List[Tuple[int,int]]]):
         xmid = int((xmin + xmax)/2)
         ymid = int((ymin + ymax)/2)
 
-        #initial_pts = [[xmin, xmin, xmax,xmax, xmid],[ymin,ymax, ymin, ymax, ymid]]
-        initial_pts =[[xmin, ymin],[xmax, ymax]]
-        print(initial_pts)
-        return initial_pts
-    
+        return [(xmin, xmax), (xmin, ymax), (xmax, ymin), (xmax, ymax), (xmid, ymid)]
+
 def check_convergence(result):
     plt.figure(1)
     plot_convergence(result)

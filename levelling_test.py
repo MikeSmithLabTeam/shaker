@@ -53,23 +53,36 @@ def measure_com(cam, pts, shaker):
 
 def balance_trial():
     with Shaker() as shaker, StepperXY() as motors:
-
+        motors.movexy(300,300)
+        
+        """
         cam = Camera(cam_type=panasonic)
-        dimensions = [(-100,1650),(-150,1350)]
-        initial_pts = [(0,1550),(-50,1250)]
+        dimensions = [(-2000,2000),(-2000,2000)]
+        initial_pts = [(-1600,-1600),(1600, 1600)]
         
         shaker.set_duty(530)
         
         bal = Balancer(shaker, cam, motors)
         result = bal.level(measure_com, dimensions=dimensions, initial_pts=initial_pts, initial_iterations=5, ncalls=50, tolerance=2)
 
-    return result
+    return result"""
 
 if __name__ == "__main__":
-    result=balance_trial()
-    print("System levelled : {}".format(result.x))
+    #balance_trial()
+    #result=balance_trial()
+    #print("System levelled : {}".format(result.x))
     
-   # with StepperXY() as motors_xy:
-    #    motors_xy.movexy(0,-50)
-        #motors_xy.move_motor(1, 500, "+")
-        #motors_xy.move_motor(2, 500,"-")
+
+    #with StepperXY() as motors_xy:
+        #motors_xy.movexy(1000,0)
+        
+        #motors_xy.move_motor(1, 1000, "+")
+        #motors_xy.move_motor(2, 1000,"+")
+
+    from labequipment.arduino import Arduino
+    from settings import stepper_arduino
+    with Arduino(settings=stepper_arduino) as ard:
+        time.sleep(2)
+        ard.send_serial_line("M1+500")
+        time.sleep(2)
+

@@ -30,9 +30,9 @@ class StepperXY(stepper.Stepper):
     """
 
     def __init__(self, motor_pos_file=SETTINGS_PATH+"motor_positions.txt"):
-        print("stepperxt init")
+        print("stepperxy init")
         ard = Arduino(stepper_arduino)
-
+        print('arduino init')
         self.motor_pos_file = motor_pos_file
         super().__init__(ard)
         
@@ -43,6 +43,7 @@ class StepperXY(stepper.Stepper):
         motor_data = motor_data.split(",")
         self.x = int(motor_data[0])
         self.y = int(motor_data[1])
+        print('finished init')
         
     def movexy(self, x : int, y: int):
         """
@@ -54,9 +55,12 @@ class StepperXY(stepper.Stepper):
         """
         dx = x - self.x
         dy = y - self.y
-        print(dx,dy)
-        motor1_steps = -2 *(dx + dy / np.sqrt(3))
-        motor2_steps = dx
+
+        print(dx)
+        print(dy)
+        
+        motor1_steps = int(-2 *(dx + dy / np.sqrt(3)))
+        motor2_steps = int(dx)
     
         if motor1_steps > 0:
             motor1_dir = '+'
