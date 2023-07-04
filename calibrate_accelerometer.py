@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from shaker import Shaker
 from labequipment.arduino import Arduino
-from settings import shaker_arduino, accelerometer_shaker
+from settings import accelerometer_shaker
 from labequipment.accelerometer import pk_acceleration
 
 def calibrate_accelerometer(start=250, stop=750, step=25):
@@ -21,8 +21,7 @@ def calibrate_accelerometer(start=250, stop=750, step=25):
     acceleration_measurements [numpy array] : array containing peak_z acceleration measurements
     """
 
-    with Arduino(shaker_arduino) as shaker_ard, Arduino(accelerometer_shaker) as acc_obj:
-        shaker = Shaker(shaker_ard)
+    with Shaker() as shaker, Arduino(accelerometer_shaker) as acc_obj:
         peak_z = pk_acceleration(acc_obj)
         
         duty_cycles = np.arange(start,stop,step)
@@ -40,7 +39,7 @@ if __name__ == "__main__": #controlling shaker
     
     #plotting peak z-acc array
     fig = plt.figure()
-    plt.xlabel('Time')
+    plt.xlabel('Duty Cycle ($%$)')
     plt.ylabel('Peak z-acc ($\Gamma$)')
     plt.plot(duty_cycles, acceleration, '.-')
     plt.grid()

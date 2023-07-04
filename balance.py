@@ -61,7 +61,7 @@ class Balancer:
         cx, cy = find_centre(pts)
         return pts, cx, cy
     
-    def level(self, measure_fn, dimensions : List[Tuple[int, int]]=None, initial_pts : List[Tuple[int, int]]=None, initial_iterations=10, ncalls=50, tolerance=2):
+    def level(self, measure_fn, dimensions : List[Tuple[int, int]]=None, use_pts=None, use_costs=None, initial_iterations=10, ncalls=50, tolerance=2):
         """Control loop to try and level the shaker. Uses method to minimise
         the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
         by moving the motors.
@@ -91,7 +91,7 @@ class Balancer:
             
             return cost
         
-        result_gp = gp_minimize(min_fn, dimensions, x0=generate_initial_pts(initial_pts), n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
+        result_gp = gp_minimize(min_fn, dimensions, x0=generate_initial_pts(use_pts), y0=generate_initial_costs(use_costs), n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
         #result_gp = gbrt_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), initial_point_generator="grid",n_initial_points=10, n_calls=ncalls)
         
         return result_gp
@@ -169,7 +169,11 @@ def find_com(bw_img):
     y = np.mean(yvals)
     return x,y
 
-def generate_initial_pts(initial_pts : Optional[List[Tuple[int,int]]]):
+
+
+
+
+def generate_initial_pts(initial_pts):
     """Takes 2 points assumed to be upper left and bottom right of centre and generates
     some initial values to feed to the minimiser
     
@@ -177,6 +181,9 @@ def generate_initial_pts(initial_pts : Optional[List[Tuple[int,int]]]):
     """
     if initial_pts is None:
         return None
+    elif initial_pts == 'use_file':
+        # load stuff from the file
+        return initial_pts
     else:
         xmin = initial_pts[0][0]
         xmax = initial_pts[0][1]
@@ -187,6 +194,19 @@ def generate_initial_pts(initial_pts : Optional[List[Tuple[int,int]]]):
         ymid = int((ymin + ymax)/2)
 
         return [(xmin, xmax), (xmin, ymax), (xmax, ymin), (xmax, ymax), (xmid, ymid)]
+
+def generate_initial_costs(initial_costs : Optional[List[Tuple[int]]]):
+    if initial_costs is None:
+        return None
+    elif initial_costs == 'use_file':
+        # load stuff from the file
+    return costs
+
+
+
+
+
+
 
 def check_convergence(result):
     plt.figure(1)

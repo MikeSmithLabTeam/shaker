@@ -72,21 +72,29 @@ class StepperXY(stepper.Stepper):
 
         self.x += dx
         self.y += dy
-
-        self.move_motor(1, abs(motor1_steps), motor1_dir)
-        self.move_motor(2, abs(motor2_steps), motor2_dir)
+        
+        self._update_motors(motor1_steps, motor2_steps, motor1_dir, motor2_dir)
         
         #allowing time for motors to complete action.
         if (dx != 0) or (dy != 0):
             motor_1_time = 0.065 * abs(motor1_steps)
             motor_2_time = 0.065 * abs(motor2_steps)
-            time.sleep(motor_1_time + motor_2_time)                     
+            time.sleep(motor_1_time + motor_2_time)            
 
-        #Write positions to file
-        new_motor_data = str(self.x) + "," + str(self.y)
+    def _update_motors(self, motor1_steps, motor2_steps, motor1_dir, motor2_dir)         :
+        success = True
+        if not self.move_motor(1, abs(motor1_steps), motor1_dir):
+            success=False
+        if not self.move_motor(2, abs(motor2_steps), motor2_dir):
+            success = False
+        
+        if success:
+            #Write positions to file
+            new_motor_data = str(self.x) + "," + str(self.y)
 
-        with open(self.motor_pos_file, "w") as file:
-            motor_data = file.write(new_motor_data)
+            with open(self.motor_pos_file, "w") as file:
+                motor_data = file.write(new_motor_data)
+
 
     def __enter__(self):
         return self

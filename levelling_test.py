@@ -10,14 +10,6 @@ from labvision.camera.camera_config import CameraType
 
 panasonic = CameraType.PANASONICHCX1000
 
-
-def find_com(bw_img):
-    #Find centre x and y in black and white image.
-    yvals, xvals = np.where(bw_img)
-    x = np.mean(xvals)
-    y = np.mean(yvals)
-    return x,y
-
 def measure_com(cam, pts, shaker):
     """Measurement_com is the central bit to the process
 
@@ -30,16 +22,16 @@ def measure_com(cam, pts, shaker):
     pts : A tuple of x,y coordinates (int) defining the boundary
     shaker : A shaker object that controls the shaker
 
-    x_motor and y_motor are only included to enable the code to be tested.
-
     Returns
     -------
     x,y coordinates on the image corresponding ot the centre of mass of the particles. These are floats.
     """
     #reset everything by raising duty cycle and then ramping down to lower value
+    shaker.set_duty(550)
+    time.sleep(2)
+    shaker.set_duty(300)
+    time.sleep(2)
     shaker.set_duty(530)
-    #shaker.ramp(250,550,50)
-    
 
     #take image and analyse to find centre of mass of system
     img = cam.get_frame()
@@ -52,9 +44,10 @@ def measure_com(cam, pts, shaker):
     return x0, y0
 
 def balance_trial():
+
     with Shaker() as shaker, StepperXY() as motors:      
         cam = Camera(cam_type=panasonic)
-        dimensions = [(-4000,-250),(-250,2500)]
+        dimensions = [(-4000,4000),(-4000,4000)]
         #initial_pts = [(-1600,500),(-500, 1600)]
         initial_pts=None
 
@@ -67,22 +60,8 @@ def balance_trial():
     return result
 
 if __name__ == "__main__":
-    balance_trial()
-    #result=balance_trial()
+    #balance_trial()
     #print("System levelled : {}".format(result.x))
-    
 
-    #with StepperXY() as motors_xy:
-    #    motors_xy.movexy(-4000,2500)
-        #motors_xy.movexy(800,0)
-        #motors_xy.move_motor(1, 500, "+")
-        
-        #motors_xy.move_motor(2, 1000,"+")
-
-    #from labequipment.arduino import Arduino
-    #from settings import stepper_arduino
-    #with Arduino(settings=stepper_arduino) as ard:
-    #    time.sleep(2)
-    #    ard.send_serial_line("M1+500")
-    #    time.sleep(2)
-
+    with StepperXY() as motors_xy:
+        motors_xy.movexy(0,0)
