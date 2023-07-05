@@ -123,11 +123,11 @@ class Balancer:
         self._update_plot()
 
         with open(SETTINGS_PATH + 'track_level.txt','a') as f:
-            np.savetxt(f,np.array([self.track_levelling[-1]]))
+            np.savetxt(f,np.array([self.track_levelling[-1]]), delimiter=",")
         
         self._update_display((x,y))
 
-        return x, y, fluct_mean        
+        return x, y, fluct_mean
 
     def _update_display(self, point):
      
@@ -169,10 +169,6 @@ def find_com(bw_img):
     y = np.mean(yvals)
     return x,y
 
-
-
-
-
 def generate_initial_pts(initial_pts):
     """Takes 2 points assumed to be upper left and bottom right of centre and generates
     some initial values to feed to the minimiser
@@ -181,8 +177,13 @@ def generate_initial_pts(initial_pts):
     """
     if initial_pts is None:
         return None
-    elif initial_pts == 'use_file':
-        # load stuff from the file
+    elif initial_pts == SETTINGS_PATH+"track_level.txt":
+        with open(SETTINGS_PATH + "track_level.txt", "r") as file:
+            level_data = file.read()
+            x_level_data = level_data[:24]
+            y_level_data = level_data[25:49]
+
+        
         return initial_pts
     else:
         xmin = initial_pts[0][0]
@@ -198,15 +199,13 @@ def generate_initial_pts(initial_pts):
 def generate_initial_costs(initial_costs : Optional[List[Tuple[int]]]):
     if initial_costs is None:
         return None
-    elif initial_costs == 'use_file':
-        # load stuff from the file
-    return costs
-
-
-
-
-
-
+    elif initial_costs == SETTINGS_PATH+"track_level.txt":
+        # load costs stored from previous run in "track_level.txt"
+        with open("Z:/shaker_config/track_level.txt", 'r') as file:
+            level_data = file.read()
+            costs = level_data[-24:]
+            costs = round(float(costs), 5)
+        return costs
 
 def check_convergence(result):
     plt.figure(1)
