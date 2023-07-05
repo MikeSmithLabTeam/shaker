@@ -29,7 +29,7 @@ def measure_com(cam, pts, shaker):
     #reset everything by raising duty cycle and then ramping down to lower value
     shaker.set_duty(550)
     time.sleep(2)
-    shaker.set_duty(300)
+    shaker.set_duty(500)
     time.sleep(2)
     shaker.set_duty(530)
 
@@ -50,7 +50,7 @@ def balance_trial():
     """
     with Shaker() as shaker, StepperXY() as motors:      
         cam = Camera(cam_type=panasonic)
-        dimensions = [(-2000,2000),(-2000,2000)]
+        dimensions = [(-3000,3000),(-3000,3000)]
         #initial_pts = [(-1600,500),(-500, 1600)]
         initial_pts=None
 
@@ -58,14 +58,15 @@ def balance_trial():
         
         bal = Balancer(shaker, cam, motors)
         #result = bal.level(measure_com, dimensions=dimensions, initial_pts=initial_pts, initial_iterations=5, ncalls=50, tolerance=2)
-        result = bal.level(measure_com, dimensions=dimensions, use_pts=None, use_costs=None, initial_iterations=5, ncalls=50, tolerance=2)
-        motors.movexy(result.x, result.y) #move motors to optimal positions.
+        result = bal.level(measure_com, dimensions=dimensions, use_pts=None, use_costs=None, initial_iterations=10, ncalls=250, tolerance=2)
+        print("Moving motors to minimised position")
+        motors.movexy(result.x[0], result.x[1]) #move motors to optimal positions.
         
     return result
 
 if __name__ == "__main__":
-    balance_trial()
-    print("System levelled : {}".format(result.x))
+    #balance_trial()
+    #print("System levelled : {}".format(result.x))
 
     #with StepperXY() as motors_xy:
-     #  motors_xy.movexy(0,0)
+     #  motors_xy.movexy(500,500)
