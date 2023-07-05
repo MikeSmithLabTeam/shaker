@@ -2,7 +2,7 @@ shaker_arduino = {"PORT" : "COM5",
                   "BAUDRATE" : 115200                
                  }
 
-stepper_arduino = {"PORT" : "COM10",
+stepper_arduino = {"PORT" : "COM6",
                    "BAUDRATE" : 115200
                    }
 

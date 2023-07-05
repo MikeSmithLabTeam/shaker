@@ -105,7 +105,7 @@ class Balancer:
             
             return cost
         
-        result_gp = gp_minimize(min_fn, dimensions, x0=generate_initial_pts(use_pts), y0=generate_initial_costs(use_costs), n_random_starts=1, n_initial_points=1, n_calls=ncalls, acq_optimizer="sampling", acq_func="LCB", verbose=True)
+        result_gp = gp_minimize(min_fn, dimensions, x0=generate_initial_pts(use_pts), y0=generate_initial_costs(use_costs), n_initial_points=10, n_calls=ncalls, acq_optimizer="sampling", verbose=True)
         #result_gp = gbrt_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), initial_point_generator="grid",n_initial_points=10, n_calls=ncalls)
         
         return result_gp

@@ -8,7 +8,7 @@ from labvision.images import threshold, median_blur, apply_mask, mask_polygon, b
 from balance import find_com, Balancer
 from labvision.camera.camera_config import CameraType
 
-panasonic = CameraType.PANASONICHCX1000
+panasonic = CameraType.PANASONICHCX1000 #creating camera object.
 
 def measure_com(cam, pts, shaker):
     """Measurement_com is the central bit to the process
@@ -44,7 +44,10 @@ def measure_com(cam, pts, shaker):
     return x0, y0
 
 def balance_trial():
-
+    """
+    This function calls the level(...) function to level the shaker system given an initial boundary (dimensions).
+    Then moves the motors to the minimised result outputted by gp_minimize(...)
+    """
     with Shaker() as shaker, StepperXY() as motors:      
         cam = Camera(cam_type=panasonic)
         dimensions = [(-2000,2000),(-2000,2000)]
@@ -55,14 +58,14 @@ def balance_trial():
         
         bal = Balancer(shaker, cam, motors)
         #result = bal.level(measure_com, dimensions=dimensions, initial_pts=initial_pts, initial_iterations=5, ncalls=50, tolerance=2)
-        result = bal.level(measure_com, dimensions=dimensions, use_pts=None, use_costs=None, initial_iterations=10, ncalls=50, tolerance=2)
-        #Send stepper motors to result.x, result.y
+        result = bal.level(measure_com, dimensions=dimensions, use_pts=None, use_costs=None, initial_iterations=5, ncalls=50, tolerance=2)
+        motors.movexy(result.x, result.y) #move motors to optimal positions.
         
     return result
 
 if __name__ == "__main__":
     balance_trial()
-    #print("System levelled : {}".format(result.x))
+    print("System levelled : {}".format(result.x))
 
     #with StepperXY() as motors_xy:
-        #motors_xy.movexy(-1500,2500)
+     #  motors_xy.movexy(0,0)
