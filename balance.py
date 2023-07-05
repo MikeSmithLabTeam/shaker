@@ -62,12 +62,26 @@ class Balancer:
         return pts, cx, cy
     
     def level(self, measure_fn, dimensions : List[Tuple[int, int]]=None, use_pts=None, use_costs=None, initial_iterations=10, ncalls=50, tolerance=2):
-        """Control loop to try and level the shaker. Uses method to minimise
-        the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
+        """
+        Control loop to try and level the shaker. Uses method to minimise the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
         by moving the motors.
-
+         
+        ----Inputs : ----
         dimensions : List containing tuples [(x,x),(y,y)] where (x,x) describe the upper and lower bounds.
-        initial_pts : List containing tuples [(x,x),(y,y)]
+        initial_pts : List containing tuples [(x,x),(y,y)]     
+        use_pts : Specifies a filepath to a .txt file containing previous levelling data. (default : None)
+        use_costs : Specifies a filepath to a .txt file containing prevoius levelling data. (default : None)
+        initial_iterations : Number of iterations per call (default : 10)
+        ncalls : Number of function calls (default : 50)
+        tolerance : Tolerance on the final optimization result.
+
+
+        ---NOTES : ----
+        Filepath specified for "use_pts" and "use_costs" must contain a comma delimited .txt file formated as :
+
+                    [x_level_data],[y_level_data],[cost]
+
+                
         """
         #Number of measurements to average to get an estimate of centre of mass of particles
         self.iterations=initial_iterations
@@ -178,13 +192,16 @@ def generate_initial_pts(initial_pts):
     if initial_pts is None:
         return None
     elif initial_pts == SETTINGS_PATH+"track_level.txt":
+        #read in final x,y level from "track_level.txt" file 
         with open(SETTINGS_PATH + "track_level.txt", "r") as file:
             level_data = file.read()
-            x_level_data = level_data[:24]
-            y_level_data = level_data[25:49]
 
+            x_final_level = round(float(level_data[-75:-51]))
+            y_final_level = round(float(level_data[-50:-26]))
+            initial_pts = (x_final_level, y_final_level)
         
         return initial_pts
+    #if initial_pts specified
     else:
         xmin = initial_pts[0][0]
         xmax = initial_pts[0][1]
@@ -204,7 +221,7 @@ def generate_initial_costs(initial_costs : Optional[List[Tuple[int]]]):
         with open("Z:/shaker_config/track_level.txt", 'r') as file:
             level_data = file.read()
             costs = level_data[-24:]
-            costs = round(float(costs), 5)
+            costs = round(float(costs))
         return costs
 
 def check_convergence(result):

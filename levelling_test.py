@@ -47,21 +47,22 @@ def balance_trial():
 
     with Shaker() as shaker, StepperXY() as motors:      
         cam = Camera(cam_type=panasonic)
-        dimensions = [(-4000,4000),(-4000,4000)]
+        dimensions = [(-2000,2000),(-2000,2000)]
         #initial_pts = [(-1600,500),(-500, 1600)]
         initial_pts=None
 
         shaker.set_duty(530)
         
         bal = Balancer(shaker, cam, motors)
-        result = bal.level(measure_com, dimensions=dimensions, initial_pts=initial_pts, initial_iterations=5, ncalls=50, tolerance=2)
+        #result = bal.level(measure_com, dimensions=dimensions, initial_pts=initial_pts, initial_iterations=5, ncalls=50, tolerance=2)
+        result = bal.level(measure_com, dimensions=dimensions, use_pts=None, use_costs=None, initial_iterations=10, ncalls=50, tolerance=2)
         #Send stepper motors to result.x, result.y
         
     return result
 
 if __name__ == "__main__":
-    #balance_trial()
+    balance_trial()
     #print("System levelled : {}".format(result.x))
 
-    with StepperXY() as motors_xy:
-        motors_xy.movexy(0,0)
+    #with StepperXY() as motors_xy:
+        #motors_xy.movexy(-1500,2500)
