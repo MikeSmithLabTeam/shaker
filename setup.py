@@ -24,7 +24,7 @@ setuptools.setup(
         'typing',
         'pip install git+https://github.com/MikeSmithLabTeam/labequipment',
         'pip install git+https://github.com/mikesmithlabteam/labvision',
-        'pip install git+https://github.com/mikesmithlab/scikit-optimize/scikit-optimize.git'
+        'pip install git+https://github.com/mikesmithlab/scikit-optimize/scikit-optimize.git',
 
     ],
     test_suite='nose.collector',
