@@ -13,7 +13,7 @@ setuptools.setup(
     packages=setuptools.find_packages(
         exclude=('tests', 'docs')
     ),
-    url='https://github.com/MikeSmithLabTeam/labvision',
+    url='https://github.com/MikeSmithLabTeam/shaker',
     install_requires=[
         'opencv-python',
         'pywin32',
@@ -22,10 +22,9 @@ setuptools.setup(
         'matplotlib',
         'scipy',
         'typing',
-        'pip install git+https://github.com/MikeSmithLabTeam/labequipment',
-        'pip install git+https://github.com/mikesmithlabteam/labvision',
-        'pip install git+https://github.com/scikit-optimize/scikit-optimize.git'
-
+        'labvision @ git+https://github.com/mikesmithlabteam/labvision',
+        'labequipment @ git+https://github.com/MikeSmithLabTeam/labequipment',
+        'scikit-optimize @ git+https://github.com/mikesmithlab/scikit-optimize',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
