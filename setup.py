@@ -22,10 +22,9 @@ setuptools.setup(
         'matplotlib',
         'scipy',
         'typing',
-        'pip install git+https://github.com/mikesmithlabteam/labvision',
-        'pip install git+https://github.com/MikeSmithLabTeam/labequipment',
-        'pip install git+https://github.com/mikesmithlab/scikit-optimize/scikit-optimize.git',
-
+        'labvision @ git+https://github.com/mikesmithlabteam/labvision',
+        'labequipment @ git+https://github.com/MikeSmithLabTeam/labequipment',
+        'scikit-optimize @ git+https://github.com/mikesmithlab/scikit-optimize/scikit-optimize.git',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
