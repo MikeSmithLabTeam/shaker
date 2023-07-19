@@ -35,8 +35,8 @@ def calibrate_accelerometer(start=250, stop=750, step=25):
 
 #code to run a calibration cycle
 if __name__ == "__main__":
-    duty_cycles, acceleration = calibrate_accelerometer(start=0, stop=650, step=10)
-    np.savetxt("acceleration_data.txt", acceleration[1:])
+    duty_cycles, acceleration = calibrate_accelerometer(start=0, stop=940, step=10)
+    np.savetxt("acceleration_data5.txt", acceleration[1:])
     np.savetxt("duty_cycle_data.txt", duty_cycles[1:])
     #plotting peak z-acc array
     fig = plt.figure()
