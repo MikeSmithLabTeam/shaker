@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 from shaker import Shaker
 from labequipment.arduino import Arduino
 from settings import accelerometer_shaker
-from labequipment.accelerometer import pk_acceleration
+from labequipment.accelerometer import pk_acceler7ration
+from tqdm import tqdm
+import time
 
 def calibrate_accelerometer(start=250, stop=750, step=25):
     """
@@ -21,24 +23,26 @@ def calibrate_accelerometer(start=250, stop=750, step=25):
     """
 
     with Shaker() as shaker, Arduino(accelerometer_shaker) as acc_obj:
-        peak_z = pk_acceleration(acc_obj)
-        shaker.set_duty(0)
+        peak_z = pk_acceleration(acc_obj)                                   #measure acceleration
+        shaker.set_duty(0)                                                  #set duty
         duty_cycles = np.arange(start,stop,step)
-        acceleration_measurements = []
-        for duty_cycle in duty_cycles:
+        acceleration_measurements = []                                      #initialize empty array
+        for duty_cycle in tqdm(duty_cycles):                                #loop through all duty cycles
             shaker.set_duty(duty_cycle)
-            peak_z = pk_acceleration(acc_obj)
-            acceleration_measurements.append(peak_z)
+            time.sleep(5)
+            peak_z = pk_acceleration(acc_obj)                               #measure acceleration
+            acceleration_measurements.append(peak_z)                        #append acc measurements
         acceleration_measurements = np.array(acceleration_measurements)
 
     return duty_cycles, acceleration_measurements
 
 #code to run a calibration cycle
 if __name__ == "__main__":
-    duty_cycles, acceleration = calibrate_accelerometer(start=0, stop=940, step=10)
-    np.savetxt("acceleration_data5.txt", acceleration[1:])
-    np.savetxt("duty_cycle_data.txt", duty_cycles[1:])
-    #plotting peak z-acc array
+    duty_cycles, acceleration = calibrate_accelerometer(start=0, stop=940, step=10)     #run calibration cycle
+    np.savetxt("acceleration_data4.txt", acceleration[1:])                              #save data to txt files
+    np.savetxt("duty_cycle_data4.txt", duty_cycles[1:])
+    
+    #plotting
     fig = plt.figure()
     plt.xlabel('Duty Cycle')
     plt.ylabel('Peak z-acc ($\Gamma$)')
