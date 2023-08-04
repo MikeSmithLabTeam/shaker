@@ -1,6 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+'''
+This script loads in acceleration data, calculates the mean and st. deviation and plots as a function of duty cycle.
+Also compares measured data to data from James's thesis.
+Plots measued data, James's data, James's data * sqrt(2)
+'''
+
+
 #load in acc data + duty cycles
 acc_1 = np.loadtxt("shaker_acc_calibration/acceleration_data1.txt", dtype=float)
 acc_2 = np.loadtxt("shaker_acc_calibration/acceleration_data2.txt", dtype=float)

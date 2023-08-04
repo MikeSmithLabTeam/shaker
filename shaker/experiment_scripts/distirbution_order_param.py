@@ -3,7 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import moviepy.editor as mp
 from scipy.io.wavfile import read as wavread
-
+'''
+This script generates histograms of the magnitude of the global order parameter for 4 selected videos/.hdf5 files
+Requires 4 videos and their corresponding .hdf5 files from the particle tracking software
+'''
 
 def magnitude_hexatic(dataframe,framenumber):
     '''

@@ -4,7 +4,11 @@ from tqdm import tqdm
 from shaker.shaker import Shaker
 from labequipment.arduino import Arduino
 from shaker.settings import accelerometer_shaker
-
+'''
+This script runs an experiment on the shaker.
+It sets the duty, records the current acceleration of the shaker, records a video of the shaker 
+and saves the acceleration data to a file.
+'''
 def pk_acceleration(ard):
     """
     This function reads data from RPi Pico accelerometer and outputs current
@@ -36,14 +40,14 @@ if __name__ == '__main__':
 
         for duty in tqdm(duties):   #perform experiment (cooling cycle)
             shaker_obj.ramp(d0, duty, RATE, -1) 
-            shaker_obj.set_duty(duty)
+            shaker_obj.set_duty(duty)   #set duty
             time.sleep(6)
-            acceleration = pk_acceleration(acc_obj)
+            acceleration = pk_acceleration(acc_obj) #record acceleration
             acc.append(acceleration) 
-            shaker_obj.set_duty_and_record(duty)
+            shaker_obj.set_duty_and_record(duty)    #start recording
             time.sleep(3)
-            shaker_obj.set_duty_and_record(duty)
+            shaker_obj.set_duty_and_record(duty)    #stop recording
             time.sleep(1)
             d0 = duty
     
-    np.savetxt("acceleration_data_3.txt", acc, delimiter=",")
+    np.savetxt("acceleration_data_3.txt", acc, delimiter=",")   #save acceleration data
