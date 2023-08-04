@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import filehandling
 
-path="videos/08_03_area_f_0.6235/"
+path="videos/08_02_area_f_0.599/"
 
 def order_mid(ydata):
     '''
@@ -53,7 +53,7 @@ ax1.plot(x_interp, midpoint_order, "go", label="$\Gamma$ at avg $|\Psi_6|$")
 print("$\Gamma$=", x_interp)
 print("midpoint of order= ", midpoint_order)
 data = np.vstack((mean_order,std_order, mean_acc,std_acc)) #stack global order params and acc data
-np.savetxt("order_acc_0.6235.txt", data)    #save .txt file of orders and acc
+np.savetxt("order_acc_0.599.txt", data)    #save .txt file of orders and acc
 
 plt.xticks(fontsize=18)
 plt.yticks(fontsize=18)

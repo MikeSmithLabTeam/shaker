@@ -46,17 +46,17 @@ def video_to_duty(video_file_path):
     return duty
 
 
-path = "videos/2023_07_27_pm/set_2/"
+path = "videos/2023_07_31_am/set_1/"
 framenumber = 2
-data_filename_1 = path+"19950023.hdf5"
-data_filename_2 = path+"19950029.hdf5"
-data_filename_3 = path+"19950036.hdf5"
-data_filename_4 = path+"19950044.hdf5"
+data_filename_1 = path+"19980001.hdf5"
+data_filename_2 = path+"19980010.hdf5"
+data_filename_3 = path+"19980020.hdf5"
+data_filename_4 = path+"19980029.hdf5"
 
-video_file_1 = path+"19950023.MP4"
-video_file_2 = path+"19950029.MP4"
-video_file_3 = path+"19950036.MP4"
-video_file_4 = path+"19950044.MP4"
+video_file_1 = path+"19980001.MP4"
+video_file_2 = path+"19980010.MP4"
+video_file_3 = path+"19980020.MP4"
+video_file_4 = path+"19980029.MP4"
 
 data_frame_1 = pd.read_hdf(data_filename_1) #read in .hdf5 file
 data_frame_2 = pd.read_hdf(data_filename_2)
@@ -80,21 +80,20 @@ order_4 = magnitude_hexatic(data_frame_4, framenumber)
 
 fig, ((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2, sharey=True)    #plot distributions of 3 selected videos
 
-ax1.set_title("Distribution of |$\Psi_6$|")
 ax1.hist(order_1, bins=100)
-ax1.set_ylabel("Count")
-ax1.text(0,225,"Duty Cycle:{:10.1f}".format(duty_1)+"%")
+ax1.set_ylabel("Count",fontsize=22)
+ax1.text(0,225,"Duty Cycle:{:10.1f}".format(duty_1)+"%",fontsize=16)
 
 ax2.hist(order_2, bins=100)
-ax2.text(0,225,"Duty Cycle:{:10.1f}".format(duty_2)+"%")
+ax2.text(0,225,"Duty Cycle:{:10.1f}".format(duty_2)+"%",fontsize=16)
 
 ax3.hist(order_3, bins=100)
-ax3.set_xlabel("|$\Psi_6$|")
-ax3.set_ylabel("Count")
-ax3.text(0,225,"Duty Cycle:{:10.1f}".format(duty_3)+"%")
+ax3.set_xlabel("|$\Psi_6$|",fontsize=22)
+ax3.set_ylabel("Count",fontsize=22)
+ax3.text(0,225,"Duty Cycle:{:10.1f}".format(duty_3)+"%",fontsize=16)
 
 ax4.hist(order_4, bins=100)
-ax4.set_xlabel("|$\Psi_6$|")
-ax4.text(0,225,"Duty Cycle:{:10.1f}".format(duty_4)+"%")
+ax4.set_xlabel("|$\Psi_6$|",fontsize=22)
+ax4.text(0,225,"Duty Cycle:{:10.1f}".format(duty_4)+"%",fontsize=16)
 
 plt.show()

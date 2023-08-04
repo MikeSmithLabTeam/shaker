@@ -61,7 +61,7 @@ def video_to_duty(video_filepath):
 
 if __name__ == '__main__':
 
-    path = "videos/08_03_area_f_0.618/set_3/" #specify filepath and file names
+    path = "videos/08_02_area_f_0.598/set_3/" #specify filepath and file names
     acc_file = "acceleration_data_3.txt"    #acceleration data
     data_file = "data_3.txt"    #name of file to store data in
 
