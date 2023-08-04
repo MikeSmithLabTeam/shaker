@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from shaker import Shaker
 from labequipment.arduino import Arduino
 from settings import accelerometer_shaker
-from labequipment.accelerometer import pk_acceler7ration
+from labequipment.accelerometer import pk_acceleration
 from tqdm import tqdm
 import time
 
