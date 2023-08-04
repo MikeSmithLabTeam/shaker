@@ -43,7 +43,7 @@ def measure_com(cam, pts, shaker):
 
     return x0, y0
 
-def balance_trial():
+def balance_trial(initial_iterations=10, ncalls=20):
     """
     This function calls the level(...) function to level the shaker system given an initial boundary (dimensions).
     Then moves the motors to the minimised result outputted by gp_minimize(...)
@@ -65,7 +65,7 @@ def balance_trial():
         
         bal = Balancer(shaker, cam, motors)
         #result = bal.level(measure_com, dimensions=dimensions, initial_pts=initial_pts, initial_iterations=5, ncalls=50, tolerance=2)
-        result = bal.level(measure_com, dimensions=dimensions, use_pts=None, use_costs=None, initial_iterations=10, ncalls=20, tolerance=2)
+        result = bal.level(measure_com, dimensions=dimensions, use_pts=None, use_costs=None, initial_iterations=initial_iterations, ncalls=ncalls, tolerance=2)
         motors.movexy(result.x[0], result.x[1]) #move motors to optimal positions.
         print("Moving motors to minimised position: ", result.x[0], result.x[1])
         
