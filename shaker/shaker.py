@@ -1,10 +1,10 @@
 import sys
 sys.path.insert(0,'..')
-
-from labequipment.arduino import Arduino
-from settings import shaker_arduino
 import time
 import numpy as np
+
+from labequipment.arduino import Arduino
+from .settings import shaker_arduino
 
 
 class Shaker:

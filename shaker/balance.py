@@ -1,13 +1,14 @@
 import numpy as np
 import os
+import matplotlib.pyplot as plt
+from .settings import SETTINGS_PATH
+from typing import List, Tuple, Optional
+
+#from scipy.optimize import minimize
+from skopt import gp_minimize #Pip install my version "pip install git+https://github.com/mikesmithlab/scikit-optimize" which contains fixes 
+from skopt.plots import plot_convergence
 from labvision.images.cropmask import viewer
 from labvision.images import mask_polygon, Displayer, apply_mask, threshold, gaussian_blur, draw_circle
-#from scipy.optimize import minimize
-from skopt import gp_minimize #Pip install dev version "pip install git+https://github.com/scikit-optimize/scikit-optimize.git"
-from skopt.plots import plot_convergence
-import matplotlib.pyplot as plt
-from settings import SETTINGS_PATH
-from typing import List, Tuple, Optional
 
 class Balancer:
     def __init__(self, shaker, camera, motors,  shape='polygon', test=False):# shaker, camera, motors, centre_pt_fn, shape='hexagon'):

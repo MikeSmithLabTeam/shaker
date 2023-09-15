@@ -1,11 +1,12 @@
 import numpy as np
 import cv2
 import time
+
 from labvision.camera import Camera
-from shaker import Shaker
-from stepperXY import StepperXY
+from .shaker import Shaker
+from .stepperXY import StepperXY
 from labvision.images import threshold, median_blur, apply_mask, mask_polygon, bgr_to_gray
-from balance import find_com, Balancer
+from .balance import find_com, Balancer
 from labvision.camera.camera_config import CameraType
 
 panasonic = CameraType.PANASONICHCX1000 #creating camera object.

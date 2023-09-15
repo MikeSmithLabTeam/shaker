@@ -1,8 +1,9 @@
 import time
 import numpy as np
+
 from labequipment import stepper
 from labequipment.arduino import Arduino
-from settings import stepper_arduino, SETTINGS_PATH
+from .settings import stepper_arduino, SETTINGS_PATH
 
 
 """-------------------------------------------------------------------------------------------------------------------
