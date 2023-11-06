@@ -24,6 +24,7 @@ setuptools.setup(
         'typing',
         'labvision @ git+https://github.com/mikesmithlabteam/labvision',
         'labequipment @ git+https://github.com/MikeSmithLabTeam/labequipment',
+        'skopt @ git+https://github.com/MikeSmithLabTeam/skopt',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
