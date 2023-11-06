@@ -15,6 +15,8 @@ setuptools.setup(
     ),
     url='https://github.com/MikeSmithLabTeam/shaker',
     install_requires=[
+        'ipykernel',
+        'tqdm'
         'opencv-python',
         'pywin32',
         'numpy',
