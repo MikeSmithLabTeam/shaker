@@ -9,17 +9,19 @@ from typing import List, Tuple, Optional
 from skopt.skopt import gp_minimize
 from skopt.skopt.plots import plot_convergence
 from labvision.images.cropmask import viewer
-from labvision.images import mask_polygon, Displayer, apply_mask, threshold, gaussian_blur, draw_circle
+from labvision.images import Displayer, draw_circle
 
 
 class Balancer:
-    def __init__(self, shaker, camera, motors, boundary_pts=None, shape='polygon', test=False):
+    def __init__(self, shaker=None, camera=None, motors=None, measure_fn=None):
         """Balancer class handles levelling a shaker. 
 
         shaker an instance of Shaker() which controls vibration of shaker
         camera an instance of Camera() which allows pictures of experiment to be taken
         motors an instance of motors - usually Stepper()
+        measure_fn - image processing function that takes an image and returns the x,y coordinates of the centre of mass of the particles.
 
+        Optional:
         boundary_pts : Tuple of x,y coordinates defining the boundary of the system. If not specified, the user will be prompted to define the boundary.
 
         The basic principle is find the centre of the experiment by manually selecting the boundary.
@@ -32,35 +34,71 @@ class Balancer:
         self.shaker = shaker
         self.motors = motors
         self.cam = camera
+        self.measure_fn = measure_fn
         self.boundary_shape = shape
-        self.test = test
+        # Store datapoints for future use. Track_levelling are a list of x,y motor coords, expt_com is a list of particles C.O.M coords.
+        self.track_levelling = [[0, 0, 0]]
+        self.expt_com = []
 
+        img = self.cam.get_frame()
+        self.disp = Displayer(img, title=' ')
+        plt.ion()
+        self.fig, self.ax = plt.subplots()
+        
+
+    def get_boundary(self, boundary_pts=None, shape='polygon'):
+        """A way of user selecting boundary or can use pre-existin points"""
+        self.boundary_shape = shape
+        
         if boundary_pts:
             self.pts, self.cx, self.cy = boundary_pts
         else:
             self.pts, self.cx, self.cy = find_boundary(
                 self.cam, shape=self.boundary_shape)
 
-        # self.centre_fn = centre_pt_fn
-        img = self.cam.get_frame()
-        self.img = img
-        self.disp = Displayer(img, title=' ')
+    def get_motor_limits(self):
+        """This method is used to set some upper and lower bounds on the search area interactively"""
+        search = True
+        self.limits = []
+        corners = ['top left', 'bottom right']
+        i=0
+        while search:
+            #Ask user for some trial motor positions and move motors
+            x_motor,y_motor = self._user_coord_request(corners[i])
+            self.motors.movexy(x_motor, y_motor)
+            
+            #Once ready take a measurement of com
+            input("Press enter to continue...")
+            #Make sure we only take one measurement
+            self.iterations = 1
+            x_com, y_com, _ = self._measure()
+            self._update_display((x_com, y_com))
+            answer = input("Is this the correct position? Press 'a' to accept or another key to continue looking...")
+            if answer == "a":
+                self.limits.append((x_motor,y_motor))
+                if i == 1:
+                    search = False
+                i += 1
+    
+        self.dimensions = [(self.limits[0][0], self.limits[1][0]),(self.limits[0][1], self.limits[1][1])]
+        print("Motor limits [(x1,x2),(y1,y2)] set to: ", self.dimensions)
+        
 
-        # Store datapoints for future use. Track_levelling are a list of x,y motor coords, expt_com is a list of particles C.O.M coords.
-        self.track_levelling = [[0, 0, 0]]
-        self.expt_com = []
+    def _user_coord_request(self, position):
+        answer = input("Find coords for " + position + "for integer x and y motor positions:")
+        x, y = answer.split(",")
+        x=int(x)
+        y=int(y)
+        return x,y
 
-        plt.ion()
-        fig, self.ax = plt.subplots()
-        self.disp.update_im(self.img)
-
-    def level(self, measure_fn, dimensions: List[Tuple[int, int]] = None, use_pts=False, initial_iterations=10, ncalls=50, tolerance=2):
+    def level(self, use_pts=False, initial_iterations=10, ncalls=50, tolerance=2):
         """
         Control loop to try and level the shaker. Uses method to minimise the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
         by moving the motors.
 
         ----Inputs : ----
-        dimensions : List containing tuples [(x,x),(y,y)] where (x,x) describe the upper and lower bounds.
+        measure_fn : this is an image processing function that takes an image and returns the x,y coordinates of the centre of mass of the particles.
+
         initial_pts : List containing tuples [(x,x),(y,y)]     
         use_pts : If True the previous data in Z:\shaker_config\track.txt file containing previous levelling data will be used. Designed to allow you to continue with levelling
         initial_iterations : Number of iterations per call (default : 10)
@@ -79,15 +117,11 @@ class Balancer:
         self.iterations = initial_iterations
 
         def min_fn(new_xy_coords):
-            if self.test:
-                # Only called to run test code
-                x, y, fluctuations = self._measure(measure_fn, new_xy_coords)
-            else:
-                "Adjust the motor positions to match input"
-                self.motors.movexy(new_xy_coords[0], new_xy_coords[1])
+            "Adjust the motor positions to match input"
+            self.motors.movexy(new_xy_coords[0], new_xy_coords[1])
 
-                # Evaluate new x,y coordinates
-                x, y, fluctuations = self._measure(measure_fn)
+            # Evaluate new x,y coordinates
+            x, y, fluctuations = self._measure(caller='min_fn')
 
             # Work out how far away com is from centre
             cost = ((self.cx - x)**2+(self.cy - y)**2)**0.5
@@ -96,47 +130,41 @@ class Balancer:
                 self.iterations *= 1.5
 
             return cost
-        
+
+        # This is possibly previous info gathered from a previous run stored in Z:\MikeSmithLabSharedFolder\shaker_config\track.txt
         x0, y0 = generate_initial_pts(initial_pts=use_pts)
-        result_gp = gp_minimize(min_fn, dimensions, x0=x0, y0=y0, n_initial_points=6, n_calls=ncalls, acq_optimizer="sampling", verbose=False)
+        # The bit that minimises the cost function
+        result_gp = gp_minimize(min_fn, self.dimensions, x0=x0, y0=y0, n_initial_points=6,
+                                n_calls=ncalls, acq_optimizer="sampling", verbose=False)
 
         return result_gp
 
-    def _measure(self, measure_fn, *args):
+    def _measure(self, caller='other', *args):
         """Take a collection of measurements, calculate current com"""
         xvals = []
         yvals = []
         for _ in range(int(self.iterations)):
-            if self.test:
-                x0, y0 = measure_fn(self.cam, self.pts, self.shaker, args)
-            else:
-                x0, y0 = measure_fn(self.cam, self.pts, self.shaker)
-
-            # self.expt_com.append([x0,y0])
-
+            x0, y0 = self.measure_fn(self.cam, self.shaker, self.pts)
             xvals.append(x0)
             yvals.append(y0)
             self.measurement_counter += 1
+
         x = np.mean(xvals)
         y = np.mean(yvals)
         x_fluct = np.std(xvals)
         y_fluct = np.std(yvals)
         fluct_mean = (x_fluct**2 + y_fluct**2)**0.5 / np.sqrt(self.iterations)
-
-        self.track_levelling.append(
-            [x, y, ((self.cx - x)**2+(self.cy - y)**2)**0.5])
-
-        self._update_plot()
-
-        with open(SETTINGS_PATH + 'track_level.txt', 'a') as f:
-            np.savetxt(f, np.array([self.track_levelling[-1]]), delimiter=",")
-
-        self._update_display((x, y))
+        
+        if caller == 'min_fn':
+            self.track_levelling.append(
+                [x, y, ((self.cx - x)**2+(self.cy - y)**2)**0.5])
+            self._update_display((x, y))
+            self._update_plot()
+            self._save_data()
 
         return x, y, fluct_mean
 
     def _update_display(self, point):
-
         self.img = self.cam.get_frame()
 
         # Centre
@@ -151,7 +179,7 @@ class Balancer:
             self.img = draw_circle(
                 self.img, point[0], point[1], rad=4, color=colour, thickness=-1)
         self.disp.update_im(self.img)
-        plt.show()
+        #plt.show()
 
     def _update_plot(self):
         x = range(len(self.track_levelling))
@@ -159,6 +187,10 @@ class Balancer:
         self.ax.set_title('Levelling progress plot')
         self.ax.set_xlabel('Iteration')
         self.ax.set_ylabel('Cost')
+
+    def _save_data(self):
+        with open(SETTINGS_PATH + 'track_level.txt', 'a') as f:
+            np.savetxt(f, np.array([self.track_levelling[-1]]), delimiter=",")
 
 
 """------------------------------------------------------------------------------------------------------------------------
@@ -177,7 +209,7 @@ def find_boundary(cam, shape='polygon'):
 
 
 def find_centre(pts):
-    """Use mask to identify centre of experiment"""
+    """Find centre of experiment"""
     cx = np.mean([pt[0] for pt in pts])
     cy = np.mean([pt[1] for pt in pts])
     return cx, cy
