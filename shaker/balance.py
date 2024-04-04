@@ -35,7 +35,7 @@ class Balancer:
         self.motors = motors
         self.cam = camera
         self.measure_fn = measure_fn
-        self.boundary_shape = shape
+        
         # Store datapoints for future use. Track_levelling are a list of x,y motor coords, expt_com is a list of particles C.O.M coords.
         self.track_levelling = [[0, 0, 0]]
         self.expt_com = []
@@ -49,7 +49,7 @@ class Balancer:
     def get_boundary(self, boundary_pts=None, shape='polygon'):
         """A way of user selecting boundary or can use pre-existin points"""
         self.boundary_shape = shape
-        
+
         if boundary_pts:
             self.pts, self.cx, self.cy = boundary_pts
         else:
