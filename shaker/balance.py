@@ -99,8 +99,7 @@ class Balancer:
             return cost
 
         result_gp = gp_minimize(min_fn, dimensions, x0=generate_initial_pts(use_pts), y0=generate_initial_costs(
-            use_costs), n_initial_points=6, n_calls=ncalls, acq_optimizer="sampling", verbose=True)
-        # result_gp = gbrt_minimize(min_fn, bounds, x0=generate_initial_pts(initial_pts), initial_point_generator="grid",n_initial_points=10, n_calls=ncalls)
+            use_costs), n_initial_points=6, n_calls=ncalls, acq_optimizer="sampling", verbose=False)
 
         return result_gp
 
@@ -118,7 +117,6 @@ class Balancer:
 
             xvals.append(x0)
             yvals.append(y0)
-            print(self.measurement_counter)
             self.measurement_counter += 1
         x = np.mean(xvals)
         y = np.mean(yvals)

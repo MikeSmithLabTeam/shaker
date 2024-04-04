@@ -72,7 +72,7 @@ def measure_bubble(cam, pts, shaker):
     #take image and analyse to find centre of mass of system
     img = cam.get_frame()
     bw_img = bgr_to_gray(img)
-    img_threshold = threshold(median_blur(bw_img, kernel=(3)), value=57, mode=cv2.THRESH_BINARY_INV, configure=False)
+    img_threshold = threshold(median_blur(bw_img, kernel=(3)), value=57, invert=True, configure=False)
     img_masked = apply_mask(img_threshold, mask_polygon(np.shape(img_threshold), pts))
     x0,y0 = find_com(img_masked)
     time.sleep(0.5)
