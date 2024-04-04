@@ -10,6 +10,7 @@ from skopt.skopt import gp_minimize
 from skopt.skopt.plots import plot_convergence
 from labvision.images.cropmask import viewer
 from labvision.images import Displayer, draw_circle
+from qtwidgets.images import QImageViewer
 
 
 class Balancer:
@@ -35,16 +36,20 @@ class Balancer:
         self.motors = motors
         self.cam = camera
         self.measure_fn = measure_fn
-        
+        self.viewer = QImageViewer()
+
         # Store datapoints for future use. Track_levelling are a list of x,y motor coords, expt_com is a list of particles C.O.M coords.
         self.track_levelling = [[0, 0, 0]]
         self.expt_com = []
 
+        self.shaker.set_duty(500)
         img = self.cam.get_frame()
-        self.disp = Displayer(img, title=' ')
+        self.viewer.setImage(img)
+        self.viewer.updateViewer()
+        #self.disp = Displayer(img, title=' ')
+
         plt.ion()
         self.fig, self.ax = plt.subplots()
-        
 
     def get_boundary(self, boundary_pts=None, shape='polygon'):
         """A way of user selecting boundary or can use pre-existin points"""
@@ -61,35 +66,41 @@ class Balancer:
         search = True
         self.limits = []
         corners = ['top left', 'bottom right']
-        i=0
+        i = 0
         while search:
-            #Ask user for some trial motor positions and move motors
-            x_motor,y_motor = self._user_coord_request(corners[i])
+            # Ask user for some trial motor positions and move motors
+            x_motor, y_motor = self._user_coord_request(corners[i])
             self.motors.movexy(x_motor, y_motor)
-            
-            #Once ready take a measurement of com
-            input("Press enter to continue...")
-            #Make sure we only take one measurement
+
+            # Make sure we only take one measurement
             self.iterations = 1
             x_com, y_com, _ = self._measure()
             self._update_display((x_com, y_com))
-            answer = input("Is this the correct position? Press 'a' to accept or another key to continue looking...")
+            answer = input(
+                "Is this the correct position? Press 'a' to accept or another key to continue looking...")
             if answer == "a":
-                self.limits.append((x_motor,y_motor))
+                self.limits.append((x_motor, y_motor))
                 if i == 1:
                     search = False
                 i += 1
-    
-        self.dimensions = [(self.limits[0][0], self.limits[1][0]),(self.limits[0][1], self.limits[1][1])]
+
+        x1 = min(self.limits[0][0], self.limits[1][0])
+        x2 = max(self.limits[0][0], self.limits[1][0])
+        y1 = min(self.limits[0][1], self.limits[1][1])
+        y2 = max(self.limits[0][1], self.limits[1][1])
+
+        self.dimensions = [(x1, x2),
+                           (y1, y2)]
         print("Motor limits [(x1,x2),(y1,y2)] set to: ", self.dimensions)
-        
 
     def _user_coord_request(self, position):
-        answer = input("Find coords for " + position + "for integer x and y motor positions:")
+        answer = input("Find coords for " + position +
+                       "for integer x and y motor positions:")
+        print(answer)
         x, y = answer.split(",")
-        x=int(x)
-        y=int(y)
-        return x,y
+        x = int(x)
+        y = int(y)
+        return x, y
 
     def level(self, use_pts=False, initial_iterations=10, ncalls=50, tolerance=2):
         """
@@ -154,7 +165,7 @@ class Balancer:
         x_fluct = np.std(xvals)
         y_fluct = np.std(yvals)
         fluct_mean = (x_fluct**2 + y_fluct**2)**0.5 / np.sqrt(self.iterations)
-        
+
         if caller == 'min_fn':
             self.track_levelling.append(
                 [x, y, ((self.cx - x)**2+(self.cy - y)**2)**0.5])
@@ -165,21 +176,25 @@ class Balancer:
         return x, y, fluct_mean
 
     def _update_display(self, point):
-        self.img = self.cam.get_frame()
 
+        img = self.cam.get_frame()
         # Centre
-        self.img = draw_circle(self.img, self.cx, self.cy,
-                               rad=5, color=(0, 255, 0), thickness=-1)
-        # Measurement
-        for idx, point in enumerate(self.track_levelling):
-            if idx == (len(self.track_levelling)-1):
-                colour = (0, 0, 255)
-            else:
-                colour = (255, 0, 0)
-            self.img = draw_circle(
-                self.img, point[0], point[1], rad=4, color=colour, thickness=-1)
-        self.disp.update_im(self.img)
-        #plt.show()
+        img = draw_circle(img, self.cx, self.cy,
+                          rad=5, color=(0, 255, 0), thickness=-1)
+
+        # Plot last point
+        colour = (255, 0, 0)
+        img = draw_circle(
+            img, point[0], point[1], rad=4, color=colour, thickness=-1)
+
+        # Plot previous points on image
+        for idx, point in enumerate(self.track_levelling[:-1]):
+            colour = (0, 0, 255)
+            img = draw_circle(
+                img, point[0], point[1], rad=4, color=colour, thickness=-1)
+
+        self.viewer.setImage(img)
+        self.viewer.updateViewer()
 
     def _update_plot(self):
         x = range(len(self.track_levelling))
