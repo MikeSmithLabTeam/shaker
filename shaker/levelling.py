@@ -80,7 +80,7 @@ def measure_bubble(cam, pts, shaker):
     return x0, y0
 
 
-def balance_shaker(initial_iterations=10, ncalls=20):
+def balance_shaker(initial_iterations=10, ncalls=20, boundary_pts=None, com_func=None):
     """
     This function calls the level(...) function to level the shaker system given an initial boundary (dimensions).
     Then moves the motors to the minimised result outputted by gp_minimize(...)
@@ -100,9 +100,12 @@ def balance_shaker(initial_iterations=10, ncalls=20):
 
         shaker.set_duty(550)
         
-        bal = Balancer(shaker, cam, motors)
-        #result = bal.level(measure_com, dimensions=dimensions, initial_pts=initial_pts, initial_iterations=5, ncalls=50, tolerance=2)
-        result = bal.level(measure_com, dimensions=dimensions, use_pts=None, use_costs=None, initial_iterations=initial_iterations, ncalls=ncalls, tolerance=2)
+        bal = Balancer(shaker, cam, motors, boundary_pts=boundary_pts)
+
+        if com_func is None:
+            com_func = measure_com
+
+        result = bal.level(com_func, dimensions=dimensions, use_pts=None, use_costs=None, initial_iterations=initial_iterations, ncalls=ncalls, tolerance=2)
         motors.movexy(result.x[0], result.x[1]) #move motors to optimal positions.
         print("Moving motors to minimised position: ", result.x[0], result.x[1])
         
