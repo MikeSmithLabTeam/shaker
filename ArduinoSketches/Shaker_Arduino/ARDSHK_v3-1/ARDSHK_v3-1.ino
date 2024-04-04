@@ -22,16 +22,15 @@ const unsigned int MAX_INPUT = 20;                                  // Set max a
 hd44780_pinIO lcd(2, 11, A1, A2, A3, 12);                           // Sets LCD pins (rs, enable, d4, d5, d6, d7)
 
 /* inputting global variables for interrupt and main code use */
-bool adcDone = false;                                            // "adcDone" = 1 flags the ADC conversion as complete
-bool control = false;                                            // Control setting: 'false' = Manual, 'true' = PC
-bool currentZero = false;                                        // Flag to check against zero cross
-bool voltZero = false;                                           // Flag to sync with current zero cross
-bool dataCorrupt = false;                                        // Set data corrupt flag to 0
-bool phaseComplete = false;                                      // phaseComplete flags when Output Compare 1 triggers
+boolean adcDone = false;                                            // "adcDone" = 1 flags the ADC conversion as complete
+boolean control = false;                                            // Control setting: 'false' = Manual, 'true' = PC
+boolean currentZero = false;                                        // Flag to check against zero cross
+boolean voltZero = false;                                           // Flag to sync with current zero cross
+boolean dataCorrupt = false;                                        // Set data corrupt flag to 0
+boolean phaseComplete = false;                                      // phaseComplete flags when Output Compare 1 triggers
 const byte TONE_ADDRESS = 42;                                       // Set address of tone generating Arduino
 volatile long serialDuty = 0;                                       // Variable for storing the serial duty cycle as a percentage
 volatile long workingDuty = 0;                                      // Variable to store duty cycle variable for use in registers
-volatile long t_prev = 0;                                           // Variable to store current Timer1 count to sync
 
 /* Serial Processing (Execute Stored Commands) */
 void process_data (const char *data) {
@@ -137,19 +136,18 @@ void processIncomingByte (const byte inByte) {
   }
 }
 
-/* Pin change interrupt for current zero cross */
+/* Pin change interrupt for current zero cross
 ISR (PCINT0_vect) {
   currentZero = !currentZero;                                     // Switch the flag when the current crosses zero
 }
 
-/* Output Compare A interrupt for when Timer1 is done */
+/* Output Compare interrupt for when Timer1 is done */
 ISR (TIMER1_COMPA_vect) {
   digitalWrite(7, HIGH);                                          // Turn off the optoisolator, stop current flow in the triac
   phaseComplete = true;                                           // Set flag for maths
-  // DO SOMETHING TO UPDATE OCR1A VALUE
 }
 
-/* Output Compare B Interrupt for Manual Control */
+/* Output Compare Interrupt for Manual Control */
 ISR (TIMER1_COMPB_vect) {
   if (currentZero == voltZero){                                   // Check that the flags are in the same phase
     digitalWrite(7, LOW);                                           // Turn on the optoisolator, enable the AC power
@@ -220,9 +218,9 @@ void setup() {
   TCCR1A = 0;                                                                     // Clear TCCR1A register
   TCCR1B = 0;                                                                     // Clear TCCR1B register
   OCR1A = 2450;                                                                   // Set Compare A to max value
-  OCR1B = analogRead(0)*2.3;                                                      // Set Compare B to manual value
+  OCR1B = analogRead(0)*2.3;                                                     // Set Compare B to manual value
   TCCR1A |= (1 << COM1A1) | (0 << COM1A0);                                        // Set OC1 when compare match triggers
-  TCCR1B |= (0 << WGM13) | (1 << WGM12) | (0 << WGM11) | (0 << WGM10);            // Set Waveform Generation Mode to CTC with OCR1A as the trigger
+  TCCR1B |= (1 << WGM13) | (1 << WGM12) | (1 << WGM11) | (1 << WGM10);            // Set Waveform Generation Mode to CTC with OCR1A as the trigger
   TCCR1B |= (0 << CS12) | (1 << CS11) | (1 << CS10);                              // Set prescaler to 64 (original CS11 = 1, CS10 = 1), 4us per tick
 
   /* Set up the ADC to read the phase control setting input */
@@ -249,12 +247,11 @@ void setup() {
   /* set up INT1 as zero cross interrupt */
   Serial.begin(115200);                                                           // Enable serial communication at 115200 baud rate
   Serial.println("System ready. Type 'h' for serial commands.");                  // Verify setup complete, give prompt to assist user
-
 }
 
 void loop() {
   
-  static bool adcStarted  = false;                                             // "adcStarted" = 1 flags the ADC as busy
+  static boolean adcStarted  = false;                                             // "adcStarted" = 1 flags the ADC as busy
   static unsigned long manualDuty = 0;                                            // Initialize manual duty cycle variable
 
   if (adcDone) {                                                                  // Check if the ADC is done
@@ -279,12 +276,16 @@ void loop() {
     switch (control) {                                                              // Switch case to sync duty cycle values
       case true:                                                                      // SERIAL
         lcd.print(serialDuty);                                                          // Print current duty cycle on LCD
-        lcd.print("   ");
+        lcd.print("  ");                                                                //
         break;
-      case false:                                                                     // MANUAL
-        manualDuty = (1024L - ADC) * 100L / 1024L;                                     // Update duty cycle value (1000 defined as long type)
+      case false:      
+        Serial.println("ADC: ");     
+        Serial.println(ADC);
+        Serial.println("Timer diff :");                                                  // MANUAL;;
+        Serial.println(OCR1A - OCR1B);
+        manualDuty = (1024L - ADC) * 1000L / 1024L;                                     // Update duty cycle value (100 defined as long type)
         lcd.print(manualDuty);                                                          // Print current duty cycle on LCD
-        lcd.print("   ");
+        lcd.print("  ");
         break;
       default:                                                                        // DEFAULT
         lcd.print("Error");                                                             // Print "Error"

@@ -44,6 +44,42 @@ def measure_com(cam, pts, shaker):
 
     return x0, y0
 
+def measure_bubble(cam, pts, shaker):
+    """
+    measure_bubble uses the blue orderphilic ring with a reasonable density of nitrile particles. It repeatedly cools the
+    system and looks at where the bubble of disorder forms. It uses a blur and contour finding to find the bubble and extracts its centre of mass.
+
+    It is passed to the level method of balance and called to obtain coords of the level. Level minimises
+    the difference between this output and centre of the tray.
+
+    Parameters
+    ----------
+    cam : A camera object with method get_frame which returns an image
+    pts : A tuple of x,y coordinates (int) defining the boundary
+    shaker : A shaker object that controls the shaker
+
+    Returns
+    -------
+    x,y coordinates on the image corresponding at the centre of mass of the bubble. These are floats.
+    """
+    #reset everything by raising duty cycle and then ramping down to lower value
+    shaker.set_duty(650)
+    time.sleep(5)
+    shaker.set_duty(555)
+    time.sleep(10)
+
+
+    #take image and analyse to find centre of mass of system
+    img = cam.get_frame()
+    bw_img = bgr_to_gray(img)
+    img_threshold = threshold(median_blur(bw_img, kernel=(3)), value=57, mode=cv2.THRESH_BINARY_INV, configure=False)
+    img_masked = apply_mask(img_threshold, mask_polygon(np.shape(img_threshold), pts))
+    x0,y0 = find_com(img_masked)
+    time.sleep(0.5)
+
+    return x0, y0
+
+
 def balance_shaker(initial_iterations=10, ncalls=20):
     """
     This function calls the level(...) function to level the shaker system given an initial boundary (dimensions).
