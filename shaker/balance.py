@@ -118,7 +118,6 @@ class Balancer:
 
             xvals.append(x0)
             yvals.append(y0)
-            print(self.measurement_counter)
             self.measurement_counter += 1
         x = np.mean(xvals)
         y = np.mean(yvals)
