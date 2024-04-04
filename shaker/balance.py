@@ -6,8 +6,8 @@ from typing import List, Tuple, Optional
 
 # from scipy.optimize import minimize
 # Pip install my version "pip install git+https://github.com/mikesmithlab/scikit-optimize" which contains fixes
-from skopt import gp_minimize
-from skopt.plots import plot_convergence
+from skopt.skopt import gp_minimize
+from skopt.skopt.plots import plot_convergence
 from labvision.images.cropmask import viewer
 from labvision.images import mask_polygon, Displayer, apply_mask, threshold, gaussian_blur, draw_circle
 
