@@ -79,6 +79,9 @@ def measure_bubble(cam, pts, shaker):
 
     return x0, y0
 
+def setup_motor_limits():
+    
+
 
 def balance_shaker(initial_iterations=10, ncalls=20, boundary_pts=None, com_func=None):
     """
@@ -95,9 +98,6 @@ def balance_shaker(initial_iterations=10, ncalls=20, boundary_pts=None, com_func
     with Shaker() as shaker, StepperXY() as motors:      
         cam = Camera(cam_type=panasonic)
         dimensions = [(-750,750),(-400,400)]
-        #initial_pts = [(-1600,500),(-500, 1600)]
-        initial_pts=None
-
         shaker.set_duty(550)
         
         bal = Balancer(shaker, cam, motors, boundary_pts=boundary_pts)
@@ -105,7 +105,7 @@ def balance_shaker(initial_iterations=10, ncalls=20, boundary_pts=None, com_func
         if com_func is None:
             com_func = measure_com
 
-        result = bal.level(com_func, dimensions=dimensions, use_pts=None, use_costs=None, initial_iterations=initial_iterations, ncalls=ncalls, tolerance=2)
+        result = bal.level(com_func, dimensions=dimensions, use_pts=False, initial_iterations=initial_iterations, ncalls=ncalls, tolerance=2)
         motors.movexy(result.x[0], result.x[1]) #move motors to optimal positions.
         print("Moving motors to minimised position: ", result.x[0], result.x[1])
         

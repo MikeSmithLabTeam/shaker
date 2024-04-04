@@ -54,7 +54,7 @@ class Balancer:
         fig, self.ax = plt.subplots()
         self.disp.update_im(self.img)
 
-    def level(self, measure_fn, dimensions: List[Tuple[int, int]] = None, use_pts=None, use_costs=None, initial_iterations=10, ncalls=50, tolerance=2):
+    def level(self, measure_fn, dimensions: List[Tuple[int, int]] = None, use_pts=False, initial_iterations=10, ncalls=50, tolerance=2):
         """
         Control loop to try and level the shaker. Uses method to minimise the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
         by moving the motors.
@@ -62,15 +62,14 @@ class Balancer:
         ----Inputs : ----
         dimensions : List containing tuples [(x,x),(y,y)] where (x,x) describe the upper and lower bounds.
         initial_pts : List containing tuples [(x,x),(y,y)]     
-        use_pts : Specifies a filepath to a .txt file containing previous levelling data. (default : None)
-        use_costs : Specifies a filepath to a .txt file containing prevoius levelling data. (default : None)
+        use_pts : If True the previous data in Z:\shaker_config\track.txt file containing previous levelling data will be used. Designed to allow you to continue with levelling
         initial_iterations : Number of iterations per call (default : 10)
         ncalls : Number of function calls (default : 50)
         tolerance : Tolerance on the final optimization result.
 
 
         ---NOTES : ----
-        Filepath specified for "use_pts" and "use_costs" must contain a comma delimited .txt file formated as :
+        track.txt file is formatted as :
 
                     [x_level_data],[y_level_data],[cost]
 
@@ -97,9 +96,9 @@ class Balancer:
                 self.iterations *= 1.5
 
             return cost
-
-        result_gp = gp_minimize(min_fn, dimensions, x0=generate_initial_pts(use_pts), y0=generate_initial_costs(
-            use_costs), n_initial_points=6, n_calls=ncalls, acq_optimizer="sampling", verbose=False)
+        
+        x0, y0 = generate_initial_pts(initial_pts=use_pts)
+        result_gp = gp_minimize(min_fn, dimensions, x0=x0, y0=y0, n_initial_points=6, n_calls=ncalls, acq_optimizer="sampling", verbose=False)
 
         return result_gp
 
@@ -192,47 +191,25 @@ def find_com(bw_img):
     return x, y
 
 
-def generate_initial_pts(initial_pts):
+def generate_initial_pts(initial_pts=False):
     """Takes 2 points assumed to be upper left and bottom right of centre and generates
     some initial values to feed to the minimiser
 
     initial_pts : List containing tuples. [(x, x), (y, y)]    
     """
-    if initial_pts is None:
-        return None
-    elif initial_pts == SETTINGS_PATH+"track_level.txt":
+    if initial_pts:
         # read in final x,y level from "track_level.txt" file
         with open(SETTINGS_PATH + "track_level.txt", "r") as file:
             level_data = file.read()
-
             x_final_level = round(float(level_data[-75:-51]))
             y_final_level = round(float(level_data[-50:-26]))
             initial_pts = (x_final_level, y_final_level)
-
-        return initial_pts
-    # if initial_pts specified
-    else:
-        xmin = initial_pts[0][0]
-        xmax = initial_pts[0][1]
-        ymin = initial_pts[1][0]
-        ymax = initial_pts[1][1]
-
-        xmid = int((xmin + xmax)/2)
-        ymid = int((ymin + ymax)/2)
-
-        return [(xmin, xmax), (xmin, ymax), (xmax, ymin), (xmax, ymax), (xmid, ymid)]
-
-
-def generate_initial_costs(initial_costs: Optional[List[Tuple[int]]]):
-    if initial_costs is None:
-        return None
-    elif initial_costs == SETTINGS_PATH+"track_level.txt":
-        # load costs stored from previous run in "track_level.txt"
-        with open("Z:/shaker_config/track_level.txt", 'r') as file:
-            level_data = file.read()
             costs = level_data[-24:]
             costs = round(float(costs))
-        return costs
+    else:
+        initial_pts = None
+        costs = None
+    return initial_pts, costs
 
 
 def check_convergence(result):
@@ -245,9 +222,9 @@ def check_convergence(result):
 Measurement functions
 --------------------------------------------------------------------------------------------------------------------------"""
 
-
+"""
 def measure_com(cam, pts, shaker, x_motor, y_motor):
-    """Measurement_com is the central bit to the process
+    Measurement_com is the central bit to the process
 
     It is passed to the level method of balance and called to obtain coords of the level. Level minimises
     the difference between this output and centre of the tray.
@@ -263,7 +240,7 @@ def measure_com(cam, pts, shaker, x_motor, y_motor):
     Returns
     -------
     x,y coordinates on the image corresponding to the centre of mass of the particles. These are floats.
-    """
+    
     # reset everything by raising duty cycle and then ramping down to lower value
     shaker.change_duty(500)
     shaker.ramp(500, 300, 1)
@@ -275,3 +252,4 @@ def measure_com(cam, pts, shaker, x_motor, y_motor):
         img[:, :, 2], kernel=(5, 5)), value=103, configure=False)
     x0, y0 = find_com(bw_img)
     return x0, y0
+"""
