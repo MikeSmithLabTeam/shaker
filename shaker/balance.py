@@ -62,10 +62,10 @@ class Balancer:
 
     def get_motor_limits(self):
         """This method is used to set some upper and lower bounds on the search area interactively"""
-        search = True
         self.limits = []
         corners = ['top left', 'bottom right']
         i = 0
+        search = True
         while search:
             # Ask user for some trial motor positions and move motors
             x_motor, y_motor = user_coord_request(corners[i])
@@ -75,12 +75,19 @@ class Balancer:
             self.iterations = 1
             x_com, y_com, _ = self._measure()
             self._update_display((x_com, y_com))
+            
             point_ok = get_yes_no_input()
+            if point_ok:
+                print("Point requested: (" + str(x_motor) + "," +  str(y_motor) + ") : Accepted for " + corners[1])
+            else:
+                print("Point requested: (" + str(x_motor) + "," +  str(y_motor) + ") : Discarded")
+
             if point_ok:
                 self.limits.append((x_motor, y_motor))
                 if i == 1:
                     search = False
                 i += 1
+            print(search, i)
 
         x1 = min(self.limits[0][0], self.limits[1][0])
         x2 = max(self.limits[0][0], self.limits[1][0])
