@@ -37,7 +37,6 @@ class StepperXY(stepper.Stepper):
         
         # read initial positions from file and put in self.x and self.y
         motor_data = update_settings_file()['motor_pos']
-        print(motor_data)
         motor_data = motor_data.split(",")
         self.x = int(motor_data[0])
         self.y = int(motor_data[1])
@@ -72,7 +71,6 @@ class StepperXY(stepper.Stepper):
         self._update_motors(motor1_steps, motor2_steps, motor1_dir, motor2_dir)     
 
     def _update_motors(self, motor1_steps, motor2_steps, motor1_dir, motor2_dir):   
-        print(motor1_steps, motor2_steps)
         success1 = self.move_motor(1, abs(motor1_steps), motor1_dir) 
         success2 = self.move_motor(2, abs(motor2_steps), motor2_dir)
         

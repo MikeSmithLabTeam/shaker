@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
 import json
+import cv2
 
 from .settings import SETTINGS_PATH, SETTINGS_FILE, TRACK_LEVEL
 
@@ -188,6 +189,14 @@ class Balancer:
 
     def _update_display(self, point):
         img = self.cam.get_frame()
+        
+        #Draw axes
+        img = cv2.arrowedLine(img, (self.cx, self.cy), (self.cx, self.cy + 100), (0, 0, 255), 2)
+        img = cv2.arrowedLine(img, (self.cx, self.cy), (self.cx + 100, self.cy), (0, 0, 255), 2)
+        img = cv2.putText(img, "Y", (self.cx, self.cy + 120), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        img = cv2.putText(img, "X", (self.cx + 120, self.cy), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+
         # Centre
         img = draw_circle(img, self.cx, self.cy,
                           rad=5, color=(0, 255, 0), thickness=-1)
