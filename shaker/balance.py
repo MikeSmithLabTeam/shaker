@@ -60,43 +60,52 @@ class Balancer:
             self.pts, self.cx, self.cy = find_boundary(
                 self.cam, shape=self.boundary_shape)
 
-    def get_motor_limits(self):
-        """This method is used to set some upper and lower bounds on the search area interactively"""
-        self.limits = []
-        corners = ['top left', 'bottom right']
-        i = 0
-        search = True
-        while search:
-            # Ask user for some trial motor positions and move motors
-            x_motor, y_motor = user_coord_request(corners[i])
-            self.motors.movexy(x_motor, y_motor)
+    def get_motor_limits(self, motor_limits=None):
+        """This method is used to set some upper and lower bounds on the search area interactively
+        
+        motor_limits : List containing tuples [(x1,x2),(y1,y2)]
+        """
+        if motor_limits:
+            self.motor_limits = motor_limits
+        else:
+            self.limits = []
+            corners = ['top left', 'bottom right']
+            i = 0
+            search = True
+            while search:
+                # Ask user for some trial motor positions and move motors
+                x_motor, y_motor = user_coord_request(corners[i])
+                self.motors.movexy(x_motor, y_motor)
 
-            # Make sure we only take one measurement
-            self.iterations = 1
-            x_com, y_com, _ = self._measure()
-            self._update_display((x_com, y_com))
-            
-            point_ok = get_yes_no_input()
-            if point_ok:
-                print("Point requested: (" + str(x_motor) + "," +  str(y_motor) + ") : Accepted for " + corners[i])
-            else:
-                print("Point requested: (" + str(x_motor) + "," +  str(y_motor) + ") : Discarded")
+                # Make sure we only take one measurement
+                self.iterations = 1
+                x_com, y_com, _ = self._measure()
+                self._update_display((x_com, y_com))
+                
+                point_ok = get_yes_no_input()
+                if point_ok:
+                    print("Point requested: (" + str(x_motor) + "," +  str(y_motor) + ") : Accepted for " + corners[i])
+                else:
+                    print("Point requested: (" + str(x_motor) + "," +  str(y_motor) + ") : Discarded")
 
-            if point_ok:
-                self.limits.append((x_motor, y_motor))
-                if i == 1:
-                    search = False
-                i += 1
-            print(search, i)
+                if point_ok:
+                    self.limits.append((x_motor, y_motor))
+                    if i == 1:
+                        search = False
+                    i += 1
+                
 
-        x1 = min(self.limits[0][0], self.limits[1][0])
-        x2 = max(self.limits[0][0], self.limits[1][0])
-        y1 = min(self.limits[0][1], self.limits[1][1])
-        y2 = max(self.limits[0][1], self.limits[1][1])
+            x1 = min(self.limits[0][0], self.limits[1][0])
+            x2 = max(self.limits[0][0], self.limits[1][0])
+            y1 = min(self.limits[0][1], self.limits[1][1])
+            y2 = max(self.limits[0][1], self.limits[1][1])
 
-        self.dimensions = [(x1, x2),
-                           (y1, y2)]
-        print("Motor limits [(x1,x2),(y1,y2)] set to: ", self.dimensions)
+            self.motor_limits = [(x1, x2),
+                            (y1, y2)]
+        
+        print("Motor limits [(x1,x2),(y1,y2)] set to: ", self.motor_limits)
+
+        return self.motor_limits
 
 
     def level(self, use_pts=False, initial_iterations=10, ncalls=50, tolerance=2):
@@ -142,7 +151,7 @@ class Balancer:
         # This is possibly previous info gathered from a previous run stored in Z:\MikeSmithLabSharedFolder\shaker_config\track.txt
         x0, y0 = generate_initial_pts(initial_pts=use_pts)
         # The bit that minimises the cost function
-        result_gp = gp_minimize(min_fn, self.dimensions, x0=x0, y0=y0, n_initial_points=6,
+        result_gp = gp_minimize(min_fn, self.motor_limits, x0=x0, y0=y0, n_initial_points=6,
                                 n_calls=ncalls, acq_optimizer="sampling", verbose=False)
 
         return result_gp

@@ -43,7 +43,7 @@ class StepperXY(stepper.Stepper):
         motor_data = motor_data.split(",")
         self.x = int(motor_data[0])
         self.y = int(motor_data[1])
-        time.sleep(7)
+        time.sleep(0.5)
         
     def movexy(self, x : int, y: int):
         """
@@ -55,9 +55,6 @@ class StepperXY(stepper.Stepper):
         """
         dx = x - self.x
         dy = y - self.y
-
-        #print('dx : ', dx)
-        #print('dy : ', dy)
  
         motor1_steps = int((dx - dy)/2)
         motor2_steps = int((dx + dy)/2) # The motors move the feet in opposite directions hence sign is opposite to what you expect.
