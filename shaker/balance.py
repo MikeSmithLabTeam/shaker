@@ -37,9 +37,7 @@ class Balancer:
         self.motors = motors
         self.cam = camera
         self.measure_fn = measure_fn
-        self.app = QApplication([])
-        self.viewer = QImageViewer()
-        self.app.exec_()
+        
 
         # Store datapoints for future use. Track_levelling are a list of x,y motor coords, expt_com is a list of particles C.O.M coords.
         self.track_levelling = [[0, 0, 0]]
@@ -47,18 +45,10 @@ class Balancer:
 
         self.shaker.set_duty(500)
         img = self.cam.get_frame()
-        self.create_display()
-        # self.disp = Displayer(img, title=' ')
-
+        self.disp = Displayer(img, title=' ')
         plt.ion()
         self.fig, self.ax = plt.subplots()
 
-    def create_display(self):
-        app = QApplication([])
-        img = self.cam.get_frame()
-        self.viewer.setImage(img)
-        self.viewer.updateViewer()
-        app.exec_()
 
     def get_boundary(self, boundary_pts=None, shape='polygon'):
         """A way of user selecting boundary or can use pre-existin points"""
@@ -78,7 +68,7 @@ class Balancer:
         i = 0
         while search:
             # Ask user for some trial motor positions and move motors
-            x_motor, y_motor = self._user_coord_request(corners[i])
+            x_motor, y_motor = user_coord_request(corners[i])
             self.motors.movexy(x_motor, y_motor)
 
             # Make sure we only take one measurement
@@ -102,14 +92,6 @@ class Balancer:
                            (y1, y2)]
         print("Motor limits [(x1,x2),(y1,y2)] set to: ", self.dimensions)
 
-    def _user_coord_request(self, position):
-        answer = input("Find coords for " + position +
-                       "for integer x and y motor positions:")
-        print(answer)
-        x, y = answer.split(",")
-        x = int(x)
-        y = int(y)
-        return x, y
 
     def level(self, use_pts=False, initial_iterations=10, ncalls=50, tolerance=2):
         """
@@ -185,7 +167,6 @@ class Balancer:
         return x, y, fluct_mean
 
     def _update_display(self, point):
-
         img = self.cam.get_frame()
         # Centre
         img = draw_circle(img, self.cx, self.cy,
@@ -202,8 +183,7 @@ class Balancer:
             img = draw_circle(
                 img, point[0], point[1], rad=4, color=colour, thickness=-1)
 
-        self.viewer.setImage(img)
-        self.viewer.updateViewer()
+        self.disp.update_im(img)
 
     def _update_plot(self):
         x = range(len(self.track_levelling))
@@ -220,6 +200,17 @@ class Balancer:
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
 --------------------------------------------------------------------------------------------------------------------------"""
+def user_coord_request(self, position):
+    app = QApplication([])
+    formatted=False
+    while not formatted:
+        text_coords, ok = QInputDialog.getText(None, "Set Coordinates", "Set coords for " + position +
+                       "for integer x and y motor positions: x, y")
+        if ok:
+            x,y= text_coords.split(',')
+            x=int(x)
+            y=int(y)
+            return x, y
 
 
 def find_boundary(cam, shape='polygon'):
