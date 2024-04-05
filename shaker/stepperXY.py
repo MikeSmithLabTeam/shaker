@@ -56,8 +56,8 @@ class StepperXY(stepper.Stepper):
         dx = x - self.x
         dy = y - self.y
 
-        print('dx : ', dx)
-        print('dy : ', dy)
+        #print('dx : ', dx)
+        #print('dy : ', dy)
  
         motor1_steps = int((dx - dy)/2)
         motor2_steps = int((dx + dy)/2) # The motors move the feet in opposite directions hence sign is opposite to what you expect.
