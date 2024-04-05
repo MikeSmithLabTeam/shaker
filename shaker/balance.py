@@ -1,8 +1,10 @@
 import numpy as np
-import os
 import matplotlib.pyplot as plt
-from .settings import SETTINGS_PATH
-from typing import List, Tuple, Optional
+from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
+import json 
+
+from .settings import SETTINGS_PATH, SETTINGS_FILE, TRACK_LEVEL
+
 
 # from scipy.optimize import minimize
 # Pip install my version "pip install git+https://github.com/mikesmithlab/scikit-optimize" which contains fixes
@@ -10,8 +12,7 @@ from skopt.skopt import gp_minimize
 from skopt.skopt.plots import plot_convergence
 from labvision.images.cropmask import viewer
 from labvision.images import Displayer, draw_circle
-from qtwidgets.images import QImageViewer
-from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
+
 
 
 class Balancer:
@@ -49,25 +50,27 @@ class Balancer:
         plt.ion()
         self.fig, self.ax = plt.subplots()
 
+        self.set_boundary(set_boundary_pts=False)
 
-    def get_boundary(self, boundary_pts=None, shape='polygon'):
+
+    def set_boundary(self, set_boundary_pts=True, shape='polygon'):
         """A way of user selecting boundary or can use pre-existin points"""
         self.boundary_shape = shape
 
-        if boundary_pts:
-            self.pts, self.cx, self.cy = boundary_pts
+        if set_boundary_pts:
+            self.pts, self.cx, self.cy = find_boundary(self.cam, shape=self.boundary_shape)
+            update_settings_file(boundary_pts=(self.pts, self.cx, self.cy))
         else:
-            self.pts, self.cx, self.cy = find_boundary(
-                self.cam, shape=self.boundary_shape)
+            self.pts, self.cx, self.cy = update_settings_file()['boundary_pts']
 
-    def get_motor_limits(self, motor_limits=None):
+        return (self.pts, self.cx, self.cy)
+
+    def set_motor_limits(self, set_limits=True):
         """This method is used to set some upper and lower bounds on the search area interactively
         
         motor_limits : List containing tuples [(x1,x2),(y1,y2)]
         """
-        if motor_limits:
-            self.motor_limits = motor_limits
-        else:
+        if set_limits:
             self.limits = []
             corners = ['top left', 'bottom right']
             i = 0
@@ -103,6 +106,9 @@ class Balancer:
             self.motor_limits = [(x1, x2),
                             (y1, y2)]
         
+        else:
+            self.motor_limits = update_settings_file()['motor_limits']
+            
         print("Motor limits [(x1,x2),(y1,y2)] set to: ", self.motor_limits)
 
         return self.motor_limits
@@ -208,7 +214,7 @@ class Balancer:
         self.ax.set_ylabel('Cost')
 
     def _save_data(self):
-        with open(SETTINGS_PATH + 'track_level.txt', 'a') as f:
+        with open(SETTINGS_PATH + TRACK_LEVEL, 'a') as f:
             np.savetxt(f, np.array([self.track_levelling[-1]]), delimiter=",")
 
 
@@ -293,38 +299,26 @@ def check_convergence(result):
     plt.show()
 
 
-"""------------------------------------------------------------------------------------------------------------------------
-Measurement functions
---------------------------------------------------------------------------------------------------------------------------"""
+def update_settings_file(motor_pos=None, motor_limits=None, boundary_pts=None):
+    try:
+        with open(SETTINGS_PATH + SETTINGS_FILE) as f: 
+            settings = json.loads(f.read())
+        
+        if motor_pos:
+            settings['motor_pos'] = motor_pos
+        if motor_limits:
+            settings['motor_limits'] = motor_limits
+        if boundary_pts:
+            settings['boundary_pts'] = boundary_pts    
 
-"""
-def measure_com(cam, pts, shaker, x_motor, y_motor):
-    Measurement_com is the central bit to the process
-
-    It is passed to the level method of balance and called to obtain coords of the level. Level minimises
-    the difference between this output and centre of the tray.
-
-    Parameters
-    ----------
-    cam : A camera object with method get_frame which returns an image
-    pts : A tuple of x,y coordinates (int) defining the boundary
-    shaker : A shaker object that controls the shaker
-
-    x_motor and y_motor are only included to enable the code to be tested.
-
-    Returns
-    -------
-    x,y coordinates on the image corresponding to the centre of mass of the particles. These are floats.
+    except:
+        settings = {'motor_pos': "0, 0", 
+                    'motor_limits': [(0, 0), (0, 0)], 
+                    'boundary_pts': (((227, 5), (429, 7), (522, 181), (422, 349), (225, 347), (126, 174)), 325.1666666666667, 177.16666666666666)
+                    }
     
-    # reset everything by raising duty cycle and then ramping down to lower value
-    shaker.change_duty(500)
-    shaker.ramp(500, 300, 1)
+    with open(SETTINGS_PATH + SETTINGS_FILE, 'w') as f:
+            f.write(json.dumps(settings))
+    
+    return settings
 
-    # take image and analyse to find centre of mass of system
-    img = cam.get_frame()
-    img = apply_mask(img, mask_polygon(np.shape(img), pts))
-    bw_img = threshold(gaussian_blur(
-        img[:, :, 2], kernel=(5, 5)), value=103, configure=False)
-    x0, y0 = find_com(bw_img)
-    return x0, y0
-"""

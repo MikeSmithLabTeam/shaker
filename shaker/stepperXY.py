@@ -3,7 +3,8 @@ import numpy as np
 
 from labequipment import stepper
 from labequipment.arduino import Arduino
-from .settings import stepper_arduino, SETTINGS_PATH
+from .settings import stepper_arduino, SETTINGS_PATH, SETTINGS_FILE
+from .balance import update_settings_file
 
 
 """-------------------------------------------------------------------------------------------------------------------
@@ -79,10 +80,9 @@ class StepperXY(stepper.Stepper):
         
         if success:
             #Write positions to file
-            new_motor_data = str(self.x) + "," + str(self.y)
+            new_motor_pos = str(self.x) + "," + str(self.y)
+            update_settings_file(motor_pos=new_motor_pos)
 
-            with open(self.motor_pos_file, "w") as file:
-                motor_data = file.write(new_motor_data)
         else:
              raise StepperMotorException("Stepper motors failed to move")
 

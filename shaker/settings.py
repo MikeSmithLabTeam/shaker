@@ -11,3 +11,7 @@ accelerometer_shaker = {"PORT": "COM8",
                         }
 
 SETTINGS_PATH = "Z:/shaker_config/"
+
+SETTINGS_FILE = "shaker1_params.txt"
+
+TRACK_LEVEL = "shaker1_level.txt"

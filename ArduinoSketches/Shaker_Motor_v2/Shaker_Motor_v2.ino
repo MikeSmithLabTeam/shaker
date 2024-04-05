@@ -59,12 +59,12 @@ void process_data (const char *data) {
         /*Pick motor number and move it*/
         switch (data[index + 1]){
           case '1':
-            stepper1->step(steps, direction, MICROSTEP);
+            stepper1->step(steps, direction, MICROSTEP); // MICROSTEP
             stepper1->release();
             Serial.println("M1 moved\n");
             break;
           case '2':
-            stepper2->step(steps, direction, MICROSTEP);
+            stepper2->step(steps, direction, MICROSTEP); //MICROSTEP
             stepper2->release();
             Serial.println("M2 moved\n");
             break;
@@ -125,8 +125,8 @@ void processIncomingByte (const byte inByte) {
 
 
 void setup() {
-  stepper1->setSpeed(100000);  // Set the initial speed for stepper motor 1 (adjust as needed)
-  stepper2->setSpeed(100000);  // Set the initial speed for stepper motor 2 (adjust as needed)
+  stepper1->setSpeed(20000);  // Set the initial speed for stepper motor 1 (adjust as needed)255
+  stepper2->setSpeed(20000);  // Set the initial speed for stepper motor 2 (adjust as needed)
   
   //sei();                                                                          // Enable global interrupts
 
