@@ -51,6 +51,7 @@ class Balancer:
         self.fig, self.ax = plt.subplots()
 
         self.set_boundary(set_boundary_pts=False)
+        self.set_motor_limits(set_limits=False)
 
 
     def set_boundary(self, set_boundary_pts=True, shape='polygon'):
