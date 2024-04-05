@@ -31,20 +31,18 @@ class StepperXY(stepper.Stepper):
 
     """
 
-    def __init__(self, motor_pos_file=SETTINGS_PATH+"motor_positions.txt"):
+    def __init__(self):
         print("stepperxy init")
         ard = Arduino(stepper_arduino)
-        self.motor_pos_file = motor_pos_file
         super().__init__(ard)
         
         # read initial positions from file and put in self.x and self.y
-        with open(motor_pos_file, 'r') as file:
-           motor_data = file.read()
-        
+        motor_data = update_settings_file()['motor_pos']
+        print(motor_data)
         motor_data = motor_data.split(",")
         self.x = int(motor_data[0])
         self.y = int(motor_data[1])
-        time.sleep(0.5)
+        time.sleep(5)
         
     def movexy(self, x : int, y: int):
         """
@@ -74,11 +72,12 @@ class StepperXY(stepper.Stepper):
         
         self._update_motors(motor1_steps, motor2_steps, motor1_dir, motor2_dir)     
 
-    def _update_motors(self, motor1_steps, motor2_steps, motor1_dir, motor2_dir)         :
-        success = self.move_motor(1, abs(motor1_steps), motor1_dir) \
-                        and self.move_motor(2, abs(motor2_steps), motor2_dir)
+    def _update_motors(self, motor1_steps, motor2_steps, motor1_dir, motor2_dir):   
+        print(motor1_steps, motor2_steps)
+        success1 = self.move_motor(1, abs(motor1_steps), motor1_dir) 
+        success2 = self.move_motor(2, abs(motor2_steps), motor2_dir)
         
-        if success:
+        if success1 and success2:
             #Write positions to file
             new_motor_pos = str(self.x) + "," + str(self.y)
             update_settings_file(motor_pos=new_motor_pos)

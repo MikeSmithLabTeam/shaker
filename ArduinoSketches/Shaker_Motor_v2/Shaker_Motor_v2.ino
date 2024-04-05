@@ -54,7 +54,7 @@ void process_data (const char *data) {
              steps=0;
         }                                                                                  //
           
-       Serial.println("\nM" + String(data[index + 1]) + " moving " + String(data[index + 2]) + String(steps) + " steps\n");                         
+       Serial.println("M" + String(data[index + 1]) + " moving " + String(data[index + 2]) + String(steps) + " steps\n");                         
 
         /*Pick motor number and move it*/
         switch (data[index + 1]){
@@ -125,7 +125,7 @@ void processIncomingByte (const byte inByte) {
 
 
 void setup() {
-  stepper1->setSpeed(20000);  // Set the initial speed for stepper motor 1 (adjust as needed)255
+  stepper1->setSpeed(20000);  // Set the initial speed for stepper motor 1 (adjust as needed)
   stepper2->setSpeed(20000);  // Set the initial speed for stepper motor 2 (adjust as needed)
   
   //sei();                                                                          // Enable global interrupts

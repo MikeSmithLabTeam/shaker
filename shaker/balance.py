@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
-import json 
+import json
 
 from .settings import SETTINGS_PATH, SETTINGS_FILE, TRACK_LEVEL
 
@@ -12,7 +12,6 @@ from skopt.skopt import gp_minimize
 from skopt.skopt.plots import plot_convergence
 from labvision.images.cropmask import viewer
 from labvision.images import Displayer, draw_circle
-
 
 
 class Balancer:
@@ -38,7 +37,6 @@ class Balancer:
         self.motors = motors
         self.cam = camera
         self.measure_fn = measure_fn
-        
 
         # Store datapoints for future use. Track_levelling are a list of x,y motor coords, expt_com is a list of particles C.O.M coords.
         self.track_levelling = [[0, 0, 0]]
@@ -53,13 +51,13 @@ class Balancer:
         self.set_boundary(set_boundary_pts=False)
         self.set_motor_limits(set_limits=False)
 
-
     def set_boundary(self, set_boundary_pts=True, shape='polygon'):
         """A way of user selecting boundary or can use pre-existin points"""
         self.boundary_shape = shape
 
         if set_boundary_pts:
-            self.pts, self.cx, self.cy = find_boundary(self.cam, shape=self.boundary_shape)
+            self.pts, self.cx, self.cy = find_boundary(
+                self.cam, shape=self.boundary_shape)
             update_settings_file(boundary_pts=(self.pts, self.cx, self.cy))
         else:
             self.pts, self.cx, self.cy = update_settings_file()['boundary_pts']
@@ -68,7 +66,7 @@ class Balancer:
 
     def set_motor_limits(self, set_limits=True):
         """This method is used to set some upper and lower bounds on the search area interactively
-        
+
         motor_limits : List containing tuples [(x1,x2),(y1,y2)]
         """
         if set_limits:
@@ -85,19 +83,20 @@ class Balancer:
                 self.iterations = 1
                 x_com, y_com, _ = self._measure()
                 self._update_display((x_com, y_com))
-                
+
                 point_ok = get_yes_no_input()
                 if point_ok:
-                    print("Point requested: (" + str(x_motor) + "," +  str(y_motor) + ") : Accepted for " + corners[i])
+                    print("Point requested: (" + str(x_motor) + "," +
+                          str(y_motor) + ") : Accepted for " + corners[i])
                 else:
-                    print("Point requested: (" + str(x_motor) + "," +  str(y_motor) + ") : Discarded")
+                    print("Point requested: (" + str(x_motor) +
+                          "," + str(y_motor) + ") : Discarded")
 
                 if point_ok:
                     self.limits.append((x_motor, y_motor))
                     if i == 1:
                         search = False
                     i += 1
-                
 
             x1 = min(self.limits[0][0], self.limits[1][0])
             x2 = max(self.limits[0][0], self.limits[1][0])
@@ -105,15 +104,14 @@ class Balancer:
             y2 = max(self.limits[0][1], self.limits[1][1])
 
             self.motor_limits = [(x1, x2),
-                            (y1, y2)]
-        
+                                 (y1, y2)]
+
         else:
             self.motor_limits = update_settings_file()['motor_limits']
-            
+
         print("Motor limits [(x1,x2),(y1,y2)] set to: ", self.motor_limits)
 
         return self.motor_limits
-
 
     def level(self, use_pts=False, initial_iterations=10, ncalls=50, tolerance=2):
         """
@@ -222,6 +220,8 @@ class Balancer:
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
 --------------------------------------------------------------------------------------------------------------------------"""
+
+
 def get_yes_no_input():
     app = QApplication([])
     reply = QMessageBox.question(None, 'Message', "Are you happy with point?",
@@ -234,19 +234,20 @@ def get_yes_no_input():
 
 def user_coord_request(position):
     app = QApplication([])
-    formatted=False
+    formatted = False
     while not formatted:
         text_coords, ok = QInputDialog.getText(None, "Set Coordinates", "Set coords for " + position +
-                       "for integer x and y motor positions: x, y")
+                                               "for integer x and y motor positions: x, y")
         if ok:
             try:
-                x,y= text_coords.split(',')
-                x=int(x)
-                y=int(y)
+                x, y = text_coords.split(',')
+                x = int(x)
+                y = int(y)
                 return x, y
             except:
                 print("Please enter integers separated by a comma")
-                formatted=False
+                formatted = False
+
 
 def find_boundary(cam, shape='polygon'):
     """find_boundary is a utility method to allow the user to define the boundary of the system. 
@@ -302,24 +303,22 @@ def check_convergence(result):
 
 def update_settings_file(motor_pos=None, motor_limits=None, boundary_pts=None):
     try:
-        with open(SETTINGS_PATH + SETTINGS_FILE) as f: 
+        with open(SETTINGS_PATH + SETTINGS_FILE) as f:
             settings = json.loads(f.read())
-        
-        if motor_pos:
-            settings['motor_pos'] = motor_pos
-        if motor_limits:
-            settings['motor_limits'] = motor_limits
-        if boundary_pts:
-            settings['boundary_pts'] = boundary_pts    
-
     except:
-        settings = {'motor_pos': "0, 0", 
-                    'motor_limits': [(0, 0), (0, 0)], 
+        settings = {'motor_pos': "0, 0",
+                    'motor_limits': [(0, 0), (0, 0)],
                     'boundary_pts': (((227, 5), (429, 7), (522, 181), (422, 349), (225, 347), (126, 174)), 325.1666666666667, 177.16666666666666)
                     }
-    
-    with open(SETTINGS_PATH + SETTINGS_FILE, 'w') as f:
-            f.write(json.dumps(settings))
-    
-    return settings
 
+    if motor_pos:
+        settings['motor_pos'] = motor_pos
+    if motor_limits:
+        settings['motor_limits'] = motor_limits
+    if boundary_pts:
+        settings['boundary_pts'] = boundary_pts
+
+    with open(SETTINGS_PATH + SETTINGS_FILE, 'w') as f:
+        f.write(json.dumps(settings))
+
+    return settings
