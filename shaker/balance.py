@@ -78,7 +78,7 @@ class Balancer:
             
             point_ok = get_yes_no_input()
             if point_ok:
-                print("Point requested: (" + str(x_motor) + "," +  str(y_motor) + ") : Accepted for " + corners[1])
+                print("Point requested: (" + str(x_motor) + "," +  str(y_motor) + ") : Accepted for " + corners[i])
             else:
                 print("Point requested: (" + str(x_motor) + "," +  str(y_motor) + ") : Discarded")
 

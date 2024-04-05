@@ -17,7 +17,7 @@ Adafruit_StepperMotor *stepper2 = AFMS.getStepper(200, 2);  // Stepper motor 2 o
 
 const int carriageReturn = 13;                                      // Decimal equivalent for carriage return character
 const int newLine = 10;                                             // Decimal equivalent for new line character
-const unsigned int MAX_INPUT = 20;                                  // Set max array size
+const unsigned int MAX_INPUT = 24;                                  // Set max array size
 boolean dataCorrupt = false;                                        // Set data corrupt flag to 0
 
 /* Serial Processing (Execute Stored Commands) */
@@ -34,7 +34,7 @@ void process_data (const char *data) {
         for (int n = index + 3; isDigit(data[n]); n++){                     // Check the next few characters without changing index value, limit to 3 digits
           steps *= 10;                                                                     // Shift digit left
           steps += data[n] - '0';                                                          // Insert new digit and take out the '0' character from the previous step
-          if (steps > 10000){                                                               // Check that steps is valid
+          if (steps > 100000){                                                               // Check that steps is valid
             steps = 0;                                                                     // Fail safe for numbers >10000
             Serial.println(F("Maximum steps exceeded. Valid numbers are 0-10000"));              // Error for user information
           }  
@@ -54,17 +54,19 @@ void process_data (const char *data) {
              steps=0;
         }                                                                                  //
           
-       Serial.println("\nM" + String(data[index + 1]) + " moved " + String(data[index + 2]) + String(steps) + " steps");                          // Print out Duty Cycle
+       Serial.println("\nM" + String(data[index + 1]) + " moving " + String(data[index + 2]) + String(steps) + " steps");                          // Print out Duty Cycle
 
         /*Pick motor number and move it*/
         switch (data[index + 1]){
           case '1':
             stepper1->step(steps, direction, MICROSTEP);
             stepper1->release();
+            Serial.println("M1 moved\n");
             break;
           case '2':
             stepper2->step(steps, direction, MICROSTEP);
             stepper2->release();
+            Serial.println("M2 moved\n");
             break;
           default:
              Serial.println("\nNot valid motor number should be 1 or 2\n");
@@ -79,7 +81,8 @@ void process_data (const char *data) {
                          "M2xxxxx \t- Move motor 2\n"
                          "xx+xxxx \t- Move motor up\n"
                          "xx-xxxx \t- Move motor down\n"
-                         "xxx1000 \t - Move motor 1000 steps\n"));
+                         "xxx1000 \t - Move motor 1000 steps\n"
+                         "Max steps = 100000\n"));
         break;
       default:                                                                              // DEFAULT
         Serial.print("'");                                                                      // Print warning for unrecognised commands
@@ -122,8 +125,8 @@ void processIncomingByte (const byte inByte) {
 
 
 void setup() {
-  stepper1->setSpeed(27000);  // Set the initial speed for stepper motor 1 (adjust as needed)
-  stepper2->setSpeed(27000);  // Set the initial speed for stepper motor 2 (adjust as needed)
+  stepper1->setSpeed(100000);  // Set the initial speed for stepper motor 1 (adjust as needed)
+  stepper2->setSpeed(100000);  // Set the initial speed for stepper motor 2 (adjust as needed)
   
   //sei();                                                                          // Enable global interrupts
 
