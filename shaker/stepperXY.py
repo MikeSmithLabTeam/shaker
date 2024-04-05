@@ -1,9 +1,8 @@
 import time
-import numpy as np
 
 from labequipment import stepper
 from labequipment.arduino import Arduino
-from .settings import stepper_arduino, SETTINGS_PATH, SETTINGS_FILE
+from .settings import stepper_arduino
 from .balance import update_settings_file
 
 

@@ -9,7 +9,6 @@ stepper_arduino = {"PORT": "COM4",
 accelerometer_shaker = {"PORT": "COM8",
                         "BAUDRATE": 9600
                         }
-motor_steps_persec = 2000/128
 
 SETTINGS_PATH = "Z:/shaker_config/"
 
