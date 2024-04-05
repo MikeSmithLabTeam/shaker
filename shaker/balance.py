@@ -11,7 +11,7 @@ from skopt.skopt.plots import plot_convergence
 from labvision.images.cropmask import viewer
 from labvision.images import Displayer, draw_circle
 from qtwidgets.images import QImageViewer
-from PyQt5.QtWidgets import QApplication, QInputDialog
+from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
 
 
 class Balancer:
@@ -75,9 +75,8 @@ class Balancer:
             self.iterations = 1
             x_com, y_com, _ = self._measure()
             self._update_display((x_com, y_com))
-            answer = input(
-                "Is this the correct position? Press 'a' to accept or another key to continue looking...")
-            if answer == "a":
+            point_ok = get_yes_no_input()
+            if point_ok:
                 self.limits.append((x_motor, y_motor))
                 if i == 1:
                     search = False
@@ -200,6 +199,16 @@ class Balancer:
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
 --------------------------------------------------------------------------------------------------------------------------"""
+def get_yes_no_input():
+    app = QApplication([])
+    reply = QMessageBox.question(None, 'Message', "Are you happy with point?",
+                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+    if reply == QMessageBox.Yes:
+        return True
+    else:
+        return False
+
+
 def user_coord_request(position):
     app = QApplication([])
     formatted=False
