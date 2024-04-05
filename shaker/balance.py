@@ -200,18 +200,21 @@ class Balancer:
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
 --------------------------------------------------------------------------------------------------------------------------"""
-def user_coord_request(self, position):
+def user_coord_request(position):
     app = QApplication([])
     formatted=False
     while not formatted:
         text_coords, ok = QInputDialog.getText(None, "Set Coordinates", "Set coords for " + position +
                        "for integer x and y motor positions: x, y")
         if ok:
-            x,y= text_coords.split(',')
-            x=int(x)
-            y=int(y)
-            return x, y
-
+            try:
+                x,y= text_coords.split(',')
+                x=int(x)
+                y=int(y)
+                return x, y
+            except:
+                print("Please enter integers separated by a comma")
+                formatted=False
 
 def find_boundary(cam, shape='polygon'):
     """find_boundary is a utility method to allow the user to define the boundary of the system. 
