@@ -11,7 +11,7 @@ from skopt.skopt.plots import plot_convergence
 from labvision.images.cropmask import viewer
 from labvision.images import Displayer, draw_circle
 from qtwidgets.images import QImageViewer
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QInputDialog
 
 
 class Balancer:
