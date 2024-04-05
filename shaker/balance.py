@@ -11,6 +11,7 @@ from skopt.skopt.plots import plot_convergence
 from labvision.images.cropmask import viewer
 from labvision.images import Displayer, draw_circle
 from qtwidgets.images import QImageViewer
+from PyQt5.QtWidgets import QApplication
 
 
 class Balancer:
@@ -36,7 +37,9 @@ class Balancer:
         self.motors = motors
         self.cam = camera
         self.measure_fn = measure_fn
+        self.app = QApplication([])
         self.viewer = QImageViewer()
+        self.app.exec_()
 
         # Store datapoints for future use. Track_levelling are a list of x,y motor coords, expt_com is a list of particles C.O.M coords.
         self.track_levelling = [[0, 0, 0]]
@@ -44,12 +47,18 @@ class Balancer:
 
         self.shaker.set_duty(500)
         img = self.cam.get_frame()
-        self.viewer.setImage(img)
-        self.viewer.updateViewer()
-        #self.disp = Displayer(img, title=' ')
+        self.create_display()
+        # self.disp = Displayer(img, title=' ')
 
         plt.ion()
         self.fig, self.ax = plt.subplots()
+
+    def create_display(self):
+        app = QApplication([])
+        img = self.cam.get_frame()
+        self.viewer.setImage(img)
+        self.viewer.updateViewer()
+        app.exec_()
 
     def get_boundary(self, boundary_pts=None, shape='polygon'):
         """A way of user selecting boundary or can use pre-existin points"""
