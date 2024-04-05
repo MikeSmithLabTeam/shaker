@@ -74,20 +74,11 @@ class StepperXY(stepper.Stepper):
         self.x += dx
         self.y += dy
         
-        self._update_motors(motor1_steps, motor2_steps, motor1_dir, motor2_dir)
-        
-        #allowing time for motors to complete action.
-        if (dx != 0) or (dy != 0):
-            motor_1_time = 0.065 * abs(motor1_steps)
-            motor_2_time = 0.065 * abs(motor2_steps)
-            time.sleep(motor_1_time + motor_2_time)            
+        self._update_motors(motor1_steps, motor2_steps, motor1_dir, motor2_dir)     
 
     def _update_motors(self, motor1_steps, motor2_steps, motor1_dir, motor2_dir)         :
-        success = True
-        if not self.move_motor(1, abs(motor1_steps), motor1_dir):
-            success=False
-        if not self.move_motor(2, abs(motor2_steps), motor2_dir):
-            success = False
+        success = self.move_motor(1, abs(motor1_steps), motor1_dir) \
+                        and self.move_motor(2, abs(motor2_steps), motor2_dir)
         
         if success:
             #Write positions to file
@@ -95,6 +86,8 @@ class StepperXY(stepper.Stepper):
 
             with open(self.motor_pos_file, "w") as file:
                 motor_data = file.write(new_motor_data)
+        else:
+             raise StepperMotorException("Stepper motors failed to move")
 
 
     def __enter__(self):
@@ -103,3 +96,8 @@ class StepperXY(stepper.Stepper):
     def __exit__(self, *args):
         time.sleep(2)
         self.ard.quit_serial()
+
+class StepperMotorException(Exception):
+    def __init__(self, message) -> None:
+        super().__init__(message)
+        print(message)

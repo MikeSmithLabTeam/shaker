@@ -54,7 +54,7 @@ void process_data (const char *data) {
              steps=0;
         }                                                                                  //
           
-       Serial.println("\nM" + String(data[index + 1]) + " moving " + String(data[index + 2]) + String(steps) + " steps");                          // Print out Duty Cycle
+       Serial.println("\nM" + String(data[index + 1]) + " moving " + String(data[index + 2]) + String(steps) + " steps\n");                         
 
         /*Pick motor number and move it*/
         switch (data[index + 1]){
@@ -69,7 +69,7 @@ void process_data (const char *data) {
             Serial.println("M2 moved\n");
             break;
           default:
-             Serial.println("\nNot valid motor number should be 1 or 2\n");
+             Serial.println("Not valid motor number should be 1 or 2\n");
         }                                                                                    //
         break;
       case 'h':                                                                             // HELP COMMANDS
