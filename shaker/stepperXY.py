@@ -11,6 +11,7 @@ from .balance import update_settings_file
 Setup external objects
 ----------------------------------------------------------------------------------------------------------------------"""
 
+
 class StepperXY(stepper.Stepper):
     """
     Controls stepper motors to change X,Y.
@@ -20,9 +21,9 @@ class StepperXY(stepper.Stepper):
     ard - Instance of Arduino from arduino
     motor_pos_file - file path to txt file containing relative positions of stepper motors
 
-    
+
     ----Example Usage: ----
-        
+
     with arduino.Arduino('COM3') as ard:
         motor = StepperXY(ard)
         motor.movexy(1000, 0)
@@ -35,15 +36,15 @@ class StepperXY(stepper.Stepper):
         print("stepperxy init")
         ard = Arduino(stepper_arduino)
         super().__init__(ard)
-        
+
         # read initial positions from file and put in self.x and self.y
         motor_data = update_settings_file()['motor_pos']
         motor_data = motor_data.split(",")
         self.x = int(motor_data[0])
         self.y = int(motor_data[1])
         time.sleep(5)
-        
-    def movexy(self, x : int, y: int):
+
+    def movexy(self, x: int, y: int):
         """
         x and y are the requested new positions of the motors translated into x and y coordingates.
         This assumes that the 2 motors are front left and right. dy requires moving both in same direction. 
@@ -52,15 +53,15 @@ class StepperXY(stepper.Stepper):
         The method closes by updating the current values of the motors self.x and self.y and storing the new positions to a file
         """
 
-        
         dx = x - self.x
         dy = y - self.y
- 
-        #Geometry of motors means a change in height has a bigger effect on x than y.
+
+        # Geometry of motors means a change in height has a bigger effect on y than x.
         scale_motor_movements = 1/(np.sqrt(3))
-        motor1_steps = int((scale_motor_movements*dx - dy)/2)
-        motor2_steps = int((scale_motor_movements*dx + dy)/2) # The motors move the feet in opposite directions hence sign is opposite to what you expect.
-    
+        motor1_steps = int((dx - scale_motor_movements * dy)/2)
+        # The motors move the feet in opposite directions hence sign is opposite to what you expect.
+        motor2_steps = int((dx + scale_motor_movements * dy)/2)
+
         if motor1_steps > 0:
             motor1_dir = '+'
         else:
@@ -72,28 +73,28 @@ class StepperXY(stepper.Stepper):
 
         self.x += dx
         self.y += dy
-        
-        self._update_motors(motor1_steps, motor2_steps, motor1_dir, motor2_dir)     
 
-    def _update_motors(self, motor1_steps, motor2_steps, motor1_dir, motor2_dir):   
-        success1 = self.move_motor(1, abs(motor1_steps), motor1_dir) 
+        self._update_motors(motor1_steps, motor2_steps, motor1_dir, motor2_dir)
+
+    def _update_motors(self, motor1_steps, motor2_steps, motor1_dir, motor2_dir):
+        success1 = self.move_motor(1, abs(motor1_steps), motor1_dir)
         success2 = self.move_motor(2, abs(motor2_steps), motor2_dir)
-        
+
         if success1 and success2:
-            #Write positions to file
+            # Write positions to file
             new_motor_pos = str(self.x) + "," + str(self.y)
             update_settings_file(motor_pos=new_motor_pos)
 
         else:
-             raise StepperMotorException("Stepper motors failed to move")
-
+            raise StepperMotorException("Stepper motors failed to move")
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, *args):
         time.sleep(2)
         self.ard.quit_serial()
+
 
 class StepperMotorException(Exception):
     def __init__(self, message) -> None:

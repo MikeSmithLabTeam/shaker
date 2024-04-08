@@ -106,6 +106,7 @@ class Balancer:
 
             self.motor_limits = [(x1, x2),
                                  (y1, y2)]
+            update_settings_file(motor_limits=self.motor_limits)
             print("Motor limits set interactively [(x1,x2),(y1,y2)] : ", self.motor_limits)
         # read in motor limits from settings file
         else:
@@ -216,7 +217,8 @@ class Balancer:
             img = draw_circle(
                 img, point[0], point[1], rad=4, color=colour, thickness=-1)
 
-        self.disp.window_name = 'Levelling : (' + str(point[0]) + ',' + str(point[1]) + ')'
+        self.disp.close_window()
+        self.disp.window_name = 'Levelling : (X_motor, Y_motor), (x_com, y_com) : (' + str(self.motors.x) + ',' + str(self.motors.y) + '), (' + str(point[0]) + ',' + str(point[1]) + ')'
         self.disp.update_im(img)
 
     def _update_plot(self):
