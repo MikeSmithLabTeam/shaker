@@ -80,7 +80,7 @@ class Balancer:
                 x_motor, y_motor = user_coord_request(corners[i])
                 self.motors.movexy(x_motor, y_motor)
 
-                # Make sure we only take one measurement
+                # Make sure we only take few measurements
                 self.iterations = 1
                 x_com, y_com, _ = self._measure()
                 self._update_display((x_com, y_com))
@@ -106,12 +106,12 @@ class Balancer:
 
             self.motor_limits = [(x1, x2),
                                  (y1, y2)]
-
+            print("Motor limits set interactively [(x1,x2),(y1,y2)] : ", self.motor_limits)
+        # read in motor limits from settings file
         else:
             self.motor_limits = update_settings_file()['motor_limits']
-
-        print("Motor limits [(x1,x2),(y1,y2)] set to: ", self.motor_limits)
-
+            print("Motor limits from config file [(x1,x2),(y1,y2)] : ", self.motor_limits)
+        
         return self.motor_limits
 
     def level(self, use_pts=False, initial_iterations=10, ncalls=50, tolerance=2):
@@ -189,13 +189,17 @@ class Balancer:
 
     def _update_display(self, point):
         img = self.cam.get_frame()
-        
-        #Draw axes
-        img = cv2.arrowedLine(img, (self.cx, self.cy), (self.cx, self.cy + 100), (0, 0, 255), 2)
-        img = cv2.arrowedLine(img, (self.cx, self.cy), (self.cx + 100, self.cy), (0, 0, 255), 2)
-        img = cv2.putText(img, "Y", (self.cx, self.cy + 120), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        img = cv2.putText(img, "X", (self.cx + 120, self.cy), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
+        # Draw axes
+        sz = np.shape(img)
+        img = cv2.arrowedLine(img, (int(
+            0.05*sz[1]), int(0.95*sz[0])), (int(0.25*sz[1]), int(0.95*sz[0])), (0, 0, 255), 3)
+        img = cv2.arrowedLine(img, (int(
+            0.05*sz[1]), int(0.95*sz[0])), (int(0.05*sz[1]), int(0.75*sz[0])), (0, 0, 255), 3)
+        img = cv2.putText(img, "X", (int(
+            0.275*sz[1]), int(0.95*sz[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+        img = cv2.putText(img, "Y", (int(
+            0.05*sz[1]), int(0.725*sz[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
 
         # Centre
         img = draw_circle(img, self.cx, self.cy,
@@ -212,6 +216,7 @@ class Balancer:
             img = draw_circle(
                 img, point[0], point[1], rad=4, color=colour, thickness=-1)
 
+        self.disp.window_name = 'Levelling : (' + str(point[0]) + ',' + str(point[1]) + ')'
         self.disp.update_im(img)
 
     def _update_plot(self):
@@ -246,7 +251,7 @@ def user_coord_request(position):
     formatted = False
     while not formatted:
         text_coords, ok = QInputDialog.getText(None, "Set Coordinates", "Set coords for " + position +
-                                               "for integer x and y motor positions: x, y")
+                                               " for integer x and y motor positions: x, y")
         if ok:
             try:
                 x, y = text_coords.split(',')

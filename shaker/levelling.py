@@ -5,14 +5,14 @@ import time
 from labvision.camera import Camera
 from .shaker import Shaker
 from .stepperXY import StepperXY
-from labvision.images import threshold, median_blur, apply_mask, mask_polygon, bgr_to_gray
+from labvision.images import threshold, median_blur, apply_mask, mask_polygon, bgr_to_gray, display
 from .balance import find_com, Balancer
 from labvision.camera.camera_config import CameraType
 
 panasonic = CameraType.PANASONICHCX1000  # creating camera object.
 
 
-def measure_com(cam, shaker, pts):
+def measure_com(cam, shaker, pts, debug=False):
     """Measurement_com is the central bit to the process
 
     It is passed to the level method of balance and called to obtain coords of the level. Level minimises
@@ -31,14 +31,14 @@ def measure_com(cam, shaker, pts):
     # reset everything by raising duty cycle and then ramping down to lower value
     shaker.set_duty(650)
     time.sleep(5)
-    shaker.set_duty(555)
+    shaker.set_duty(560)
     time.sleep(10)
 
     # take image and analyse to find centre of mass of system
     img = cam.get_frame()
     bw_img = bgr_to_gray(img)
     img_threshold = threshold(median_blur(
-        bw_img, kernel=(3)), value=57, invert=True, configure=False)
+        bw_img, kernel=(3)), value=87, invert=True, configure=debug)
     img_masked = apply_mask(
         img_threshold, mask_polygon(np.shape(img_threshold), pts))
     x0, y0 = find_com(img_masked)
@@ -47,7 +47,7 @@ def measure_com(cam, shaker, pts):
     return x0, y0
 
 
-def measure_bubble(cam, shaker,  pts):
+def measure_bubble(cam, shaker,  pts, debug=False):
     """
     measure_bubble uses the blue orderphilic ring with a reasonable density of nitrile particles. It repeatedly cools the
     system and looks at where the bubble of disorder forms. It uses a blur and contour finding to find the bubble and extracts its centre of mass.
@@ -75,10 +75,12 @@ def measure_bubble(cam, shaker,  pts):
     img = cam.get_frame()
     bw_img = bgr_to_gray(img)
     img_threshold = threshold(median_blur(
-        bw_img, kernel=(3)), value=57, invert=True, configure=False)
+        bw_img, kernel=(3)), value=57, invert=True, configure=debug)
     img_masked = apply_mask(
         img_threshold, mask_polygon(np.shape(img_threshold), pts))
     x0, y0 = find_com(img_masked)
+    if debug:
+        display(img_masked, x0, y0)
     time.sleep(0.5)
 
     return x0, y0

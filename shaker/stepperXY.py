@@ -1,4 +1,5 @@
 import time
+import numpy as np
 
 from labequipment import stepper
 from labequipment.arduino import Arduino
@@ -50,11 +51,15 @@ class StepperXY(stepper.Stepper):
         Motor_pos_file is path to file in which relative stepper motor positions are stored.
         The method closes by updating the current values of the motors self.x and self.y and storing the new positions to a file
         """
+
+        
         dx = x - self.x
         dy = y - self.y
  
-        motor1_steps = int((dx - dy)/2)
-        motor2_steps = int((dx + dy)/2) # The motors move the feet in opposite directions hence sign is opposite to what you expect.
+        #Geometry of motors means a change in height has a bigger effect on x than y.
+        scale_motor_movements = 1/(np.sqrt(3))
+        motor1_steps = int((scale_motor_movements*dx - dy)/2)
+        motor2_steps = int((scale_motor_movements*dx + dy)/2) # The motors move the feet in opposite directions hence sign is opposite to what you expect.
     
         if motor1_steps > 0:
             motor1_dir = '+'
