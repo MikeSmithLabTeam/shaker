@@ -40,7 +40,7 @@ class Balancer:
         self.measure_fn = measure_fn
 
         # Store datapoints for future use. Track_levelling are a list of x,y motor coords, expt_com is a list of particles C.O.M coords.
-        self.track_levelling = [[0, 0, 0]]
+        self.track_levelling = [[0, 0, 0, 0]]
         self.expt_com = []
 
         self.shaker.set_duty(500)
@@ -180,7 +180,7 @@ class Balancer:
 
         if caller == 'min_fn':
             self.track_levelling.append(
-                [x, y, ((self.cx - x)**2+(self.cy - y)**2)**0.5])
+                [x, y, ((self.cx - x)**2+(self.cy - y)**2)**0.5, fluct_mean])
             self._update_display((x, y))
             self._update_plot()
             self._save_data()
@@ -221,10 +221,12 @@ class Balancer:
 
     def _update_plot(self):
         x = range(len(self.track_levelling))
-        self.ax.plot(x[-1], self.track_levelling[-1][-1], "r.")
-        self.ax.set_title('Levelling progress plot')
-        self.ax.set_xlabel('Iteration')
-        self.ax.set_ylabel('Cost')
+        self.ax[0].plot(x[-1], self.track_levelling[-1][-2], "r.")
+        self.ax[1].plot(x[-1], self.track_levelling[-1][-1], "b.")
+        self.ax[0].set_title('Levelling progress plot')
+        self.ax[1].set_xlabel('Iteration')
+        self.ax[0].set_ylabel('Cost')
+        self.ax[1].set_ylabel('Fluctuations in mean')
 
     def _save_data(self):
         with open(SETTINGS_PATH + TRACK_LEVEL, 'a') as f:
