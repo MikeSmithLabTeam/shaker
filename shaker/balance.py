@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
 import json
 import cv2
+from IPython.display import display, clear_output
 
 from .settings import SETTINGS_PATH, SETTINGS_FILE, TRACK_LEVEL
 
@@ -217,12 +218,12 @@ class Balancer:
 
     def _update_plot(self):
         x = range(len(self.track_levelling))
-        self.ax[0].plot(x[-1], self.track_levelling[-1][-2], "r.")
-        self.ax[1].plot(x[-1], self.track_levelling[-1][-1], "b.")
-        self.ax[0].set_title('Levelling progress plot')
-        self.ax[1].set_xlabel('Iteration')
-        self.ax[0].set_ylabel('Cost')
-        self.ax[1].set_ylabel('Fluctuations in mean')
+        self.ax.errorbar(x[-1], self.track_levelling[-1][-2], yerr=self.track_levelling[-1][-1], fmt='o', ecolor='black', elinewidth=1, markerfacecolor='red', markeredgecolor='black')
+        self.ax.set_title('Levelling progress plot')
+        self.ax.set_xlabel('Iteration')
+        self.ax.set_ylabel('Cost')
+        display(self.fig)
+        clear_output(wait=True)
 
     def _save_data(self):
         with open(SETTINGS_PATH + TRACK_LEVEL, 'a') as f:
