@@ -74,7 +74,7 @@ void process_data (const char *data) {
               stepper2->step(1000, direction, MICROSTEP); // MICROSTEP
               steps-=1000;
             }
-            stepper2->step(1000, direction, MICROSTEP); // MICROSTEP
+            stepper2->step(steps, direction, MICROSTEP); // MICROSTEP
             stepper2->release();
             Serial.println("M2 moved\n");
             break;

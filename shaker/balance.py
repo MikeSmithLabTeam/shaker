@@ -267,7 +267,7 @@ def user_coord_request(position):
             except:
                 print("Please enter integers separated by a comma")
                 formatted = False
-
+                
 
 def find_boundary(cam, shape='polygon'):
     """find_boundary is a utility method to allow the user to define the boundary of the system. 
