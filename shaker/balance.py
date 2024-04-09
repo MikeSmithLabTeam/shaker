@@ -48,7 +48,7 @@ class Balancer:
         img = self.cam.get_frame()
         self.disp = Displayer(img, title=' ')
         plt.ion()
-        self.fig, self.ax = plt.subplots()
+        self.fig, self.ax = plt.subplots(nrows=2, ncols=1, figsize=(6,6))
 
         self.set_boundary(set_boundary_pts=False)
         self.set_motor_limits(set_limits=False)
