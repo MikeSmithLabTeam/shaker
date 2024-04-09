@@ -191,16 +191,7 @@ class Balancer:
     def _update_display(self, point):
         img = self.cam.get_frame()
 
-        # Draw axes
-        sz = np.shape(img)
-        img = cv2.arrowedLine(img, (int(
-            0.05*sz[1]), int(0.95*sz[0])), (int(0.25*sz[1]), int(0.95*sz[0])), (0, 0, 255), 3)
-        img = cv2.arrowedLine(img, (int(
-            0.05*sz[1]), int(0.95*sz[0])), (int(0.05*sz[1]), int(0.75*sz[0])), (0, 0, 255), 3)
-        img = cv2.putText(img, "X", (int(
-            0.275*sz[1]), int(0.95*sz[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-        img = cv2.putText(img, "Y", (int(
-            0.05*sz[1]), int(0.725*sz[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+        img=draw_img_axes(img)
 
         # Centre
         img = draw_circle(img, self.cx, self.cy,
@@ -238,7 +229,18 @@ class Balancer:
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
 --------------------------------------------------------------------------------------------------------------------------"""
-
+def draw_img_axes(img):
+    # Draw axes
+    sz = np.shape(img)
+    img = cv2.arrowedLine(img, (int(
+        0.05*sz[1]), int(0.95*sz[0])), (int(0.25*sz[1]), int(0.95*sz[0])), (0, 0, 255), 3)
+    img = cv2.arrowedLine(img, (int(
+        0.05*sz[1]), int(0.95*sz[0])), (int(0.05*sz[1]), int(0.75*sz[0])), (0, 0, 255), 3)
+    img = cv2.putText(img, "X", (int(
+        0.275*sz[1]), int(0.95*sz[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+    img = cv2.putText(img, "Y", (int(
+        0.05*sz[1]), int(0.725*sz[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+    return img
 
 def get_yes_no_input():
     app = QApplication([])
