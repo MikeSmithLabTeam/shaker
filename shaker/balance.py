@@ -107,12 +107,14 @@ class Balancer:
             self.motor_limits = [(x1, x2),
                                  (y1, y2)]
             update_settings_file(motor_limits=self.motor_limits)
-            print("Motor limits set interactively [(x1,x2),(y1,y2)] : ", self.motor_limits)
+            print(
+                "Motor limits set interactively [(x1,x2),(y1,y2)] : ", self.motor_limits)
         # read in motor limits from settings file
         else:
             self.motor_limits = update_settings_file()['motor_limits']
-            print("Motor limits from config file [(x1,x2),(y1,y2)] : ", self.motor_limits)
-        
+            print(
+                "Motor limits from config file [(x1,x2),(y1,y2)] : ", self.motor_limits)
+
         return self.motor_limits
 
     def level(self, use_pts=False, initial_iterations=10, ncalls=50, tolerance=2):
@@ -191,7 +193,7 @@ class Balancer:
     def _update_display(self, point):
         img = self.cam.get_frame()
 
-        img=draw_img_axes(img)
+        img = draw_img_axes(img)
 
         # Centre
         img = draw_circle(img, self.cx, self.cy,
@@ -209,7 +211,8 @@ class Balancer:
                 img, point[0], point[1], rad=4, color=colour, thickness=-1)
 
         self.disp.close_window()
-        self.disp.window_name = 'Levelling : (X_motor, Y_motor), (x_com, y_com) : (' + str(self.motors.x) + ',' + str(self.motors.y) + '), (' + str(point[0]) + ',' + str(point[1]) + ')'
+        self.disp.window_name = 'Levelling : (X_motor, Y_motor), (x_com, y_com), (cx, cy) : (' + str(self.motors.x) + ',' + str(
+            self.motors.y) + '), (' + str(point[0]) + ',' + str(point[1]) + '), (' + str(self.cx) + ',' + str(self.cy) + ')'
         self.disp.update_im(img)
 
     def _update_plot(self):
@@ -229,6 +232,8 @@ class Balancer:
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
 --------------------------------------------------------------------------------------------------------------------------"""
+
+
 def draw_img_axes(img):
     # Draw axes
     sz = np.shape(img)
@@ -241,6 +246,7 @@ def draw_img_axes(img):
     img = cv2.putText(img, "Y", (int(
         0.05*sz[1]), int(0.725*sz[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
     return img
+
 
 def get_yes_no_input():
     app = QApplication([])
@@ -267,7 +273,7 @@ def user_coord_request(position):
             except:
                 print("Please enter integers separated by a comma")
                 formatted = False
-                
+
 
 def find_boundary(cam, shape='polygon'):
     """find_boundary is a utility method to allow the user to define the boundary of the system. 

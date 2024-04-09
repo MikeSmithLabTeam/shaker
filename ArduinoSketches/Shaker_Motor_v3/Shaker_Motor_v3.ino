@@ -3,7 +3,9 @@
   Serial commands are interpreted when the data is available, storing all data to an array (serialBuffer)
   with the processIncomingByte function, before interpreting them in the process_data function. This
   process discards any command that exceeds the buffer limit set by MAX_INPUT.
-    
+  
+  To gain a 2x speed up of the microstepping edit the header file when building to
+  #define MICROSTEPS 8 // 8 or 16.
   */
 
 #include <Wire.h>

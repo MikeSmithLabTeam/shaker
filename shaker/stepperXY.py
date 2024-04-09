@@ -21,10 +21,20 @@ class StepperXY(stepper.Stepper):
     ard - Instance of Arduino from arduino
     motor_pos_file - file path to txt file containing relative positions of stepper motors
 
+    This code calls Stepper and interacts with the Shaker_Motor_v3.ino code on the Arduino.
+    If you upload this code to an Arduino you should manually edit the header file. Change the line:
+
+    #define MICROSTEPS 16 // 8 or 16 
+
+    to
+
+    #define MICROSTEPS 8 // 8 or 16
+
+    this will speed the motors up by a factor of 2.
 
     ----Example Usage: ----
 
-    with arduino.Arduino('COM3') as ard:
+    with arduino.Arduino('COM4') as ard:
         motor = StepperXY(ard)
         motor.movexy(1000, 0)
 
