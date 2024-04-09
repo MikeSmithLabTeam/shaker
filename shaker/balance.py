@@ -201,13 +201,13 @@ class Balancer:
                           rad=5, color=(0, 255, 0), thickness=-1)
 
         # Plot last point
-        colour = (255, 0, 0)
+        colour = (0, 0, 255)
         img = draw_circle(
             img, point[0], point[1], rad=4, color=colour, thickness=-1)
 
         # Plot previous points on image
         for idx, point in enumerate(self.track_levelling[:-1]):
-            colour = (0, 0, 255)
+            colour = (255, 0, 0)
             img = draw_circle(
                 img, point[0], point[1], rad=4, color=colour, thickness=-1)
 
