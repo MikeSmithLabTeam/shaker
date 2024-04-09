@@ -17,7 +17,7 @@ Adafruit_StepperMotor *stepper2 = AFMS.getStepper(200, 2);  // Stepper motor 2 o
 
 const int carriageReturn = 13;                                      // Decimal equivalent for carriage return character
 const int newLine = 10;                                             // Decimal equivalent for new line character
-const unsigned int MAX_INPUT = 24;                                  // Set max array size
+const unsigned int MAX_INPUT = 30;                                  // Set max array size
 boolean dataCorrupt = false;                                        // Set data corrupt flag to 0
 
 /* Serial Processing (Execute Stored Commands) */
@@ -36,7 +36,7 @@ void process_data (const char *data) {
           steps += data[n] - '0';                                                          // Insert new digit and take out the '0' character from the previous step
           if (steps > 100000){                                                               // Check that steps is valid
             steps = 0;                                                                     // Fail safe for numbers >10000
-            Serial.println(F("Maximum steps exceeded. Valid numbers are 0-10000"));              // Error for user information
+            Serial.println(F("Maximum steps exceeded. Valid numbers are 0-100000"));              // Error for user information
           }  
         }
         
@@ -59,18 +59,28 @@ void process_data (const char *data) {
         /*Pick motor number and move it*/
         switch (data[index + 1]){
           case '1':
+            //Loop present since M2 seems to max out at about 2000 steps
+            while (steps > 1000){
+              stepper1->step(1000, direction, MICROSTEP); // MICROSTEP
+              steps-=1000;
+            }
             stepper1->step(steps, direction, MICROSTEP); // MICROSTEP
             stepper1->release();
             Serial.println("M1 moved\n");
             break;
           case '2':
-            stepper2->step(steps, direction, MICROSTEP); //MICROSTEP
+            //Loop present since M2 seems to max out at about 2000 steps
+            while (steps > 1000){
+              stepper2->step(1000, direction, MICROSTEP); // MICROSTEP
+              steps-=1000;
+            }
+            stepper2->step(1000, direction, MICROSTEP); // MICROSTEP
             stepper2->release();
             Serial.println("M2 moved\n");
             break;
           default:
              Serial.println("Not valid motor number should be 1 or 2\n");
-        }                                                                                    //
+        }                                                                                   //
         break;
       case 'h':                                                                             // HELP COMMANDS
         Serial.print("\nMaximum command length = ");                                          // Warning for maximum input length
