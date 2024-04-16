@@ -6,13 +6,12 @@ import cv2
 from IPython.display import display, clear_output
 
 from .settings import SETTINGS_PATH, SETTINGS_FILE, TRACK_LEVEL
+from .centre_mass import find_boundary, SETTINGS_com_balls, SETTINGS_com_bubble, measure_com
 
 
 # from scipy.optimize import minimize
 # Pip install my version "pip install git+https://github.com/mikesmithlab/scikit-optimize" which contains fixes
 from skopt.skopt import gp_minimize
-from skopt.skopt.plots import plot_convergence
-from labvision.images.cropmask import viewer
 from labvision.images import Displayer, draw_circle
 
 
@@ -40,6 +39,14 @@ class Balancer:
         self.cam = camera
         self.measure_fn = measure_fn
 
+        if measure_fn.__name__ == 'com_balls':
+            self.com_settings = SETTINGS_com_balls
+        elif measure_fn.__name__ == 'com_bubble':
+            self.com_settings = SETTINGS_com_bubble
+        else:
+            raise ValueError(
+                "measure_fn must be com_balls or com_bubble")
+
         # Store datapoints for future use. Track_levelling are a list of x,y motor coords, expt_com is a list of particles C.O.M coords.
         self.track_levelling = [[0, 0, 0, 0]]
         self.expt_com = []
@@ -50,6 +57,7 @@ class Balancer:
         plt.ion()
         self.fig, self.ax = plt.subplots(nrows=2, ncols=1, figsize=(6,6))
 
+        #Passing False means these values are drawn from file
         self.set_boundary(set_boundary_pts=False)
         self.set_motor_limits(set_limits=False)
 
@@ -67,10 +75,12 @@ class Balancer:
         return (self.pts, self.cx, self.cy)
 
     def set_motor_limits(self, set_limits=True):
-        """This method is used to set some upper and lower bounds on the search area interactively
+        """This method is used to set some upper and lower bounds on the motors. This effectively
+        limits the area searched later when automatically levelling.
 
         motor_limits : List containing tuples [(x1,x2),(y1,y2)]
         """
+        #Set limits interactively
         if set_limits:
             self.limits = []
             corners = ['top left', 'bottom right']
@@ -171,7 +181,7 @@ class Balancer:
         xvals = []
         yvals = []
         for _ in range(int(self.iterations)):
-            x0, y0 = self.measure_fn(self.cam, self.shaker, self.pts)
+            x0, y0 = measure_com(self.cam, self.shaker, self.pts, settings=self.com_settings, debug=False)
             xvals.append(x0)
             yvals.append(y0)
             self.measurement_counter += 1
@@ -206,7 +216,7 @@ class Balancer:
             img, point[0], point[1], rad=4, color=colour, thickness=-1)
 
         # Plot previous points on image
-        for idx, point in enumerate(self.track_levelling[:-1]):
+        for point in self.track_levelling[:-1]:
             colour = (255, 0, 0)
             img = draw_circle(
                 img, point[0], point[1], rad=4, color=colour, thickness=-1)
@@ -276,31 +286,6 @@ def user_coord_request(position):
                 formatted = False
 
 
-def find_boundary(cam, shape='polygon'):
-    """find_boundary is a utility method to allow the user to define the boundary of the system. 
-    This can be used in Balancer during initialiation or called independently and the result passed to Balancer.
-    """
-    img = cam.get_frame()
-    pts = viewer(img, shape)
-    cx, cy = find_centre(pts)
-    return pts, cx, cy
-
-
-def find_centre(pts):
-    """Find centre of experiment"""
-    cx = np.mean([pt[0] for pt in pts])
-    cy = np.mean([pt[1] for pt in pts])
-    return cx, cy
-
-
-def find_com(bw_img):
-    # Find centre x and y in black and white image.
-    yvals, xvals = np.where(bw_img)
-    x = np.mean(xvals)
-    y = np.mean(yvals)
-    return x, y
-
-
 def generate_initial_pts(initial_pts=False):
     """Takes 2 points assumed to be upper left and bottom right of centre and generates
     some initial values to feed to the minimiser
@@ -320,12 +305,6 @@ def generate_initial_pts(initial_pts=False):
         initial_pts = None
         costs = None
     return initial_pts, costs
-
-
-def check_convergence(result):
-    plt.figure(1)
-    plot_convergence(result)
-    plt.show()
 
 
 def update_settings_file(motor_pos=None, motor_limits=None, boundary_pts=None):
