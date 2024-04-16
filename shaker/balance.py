@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
@@ -90,7 +91,8 @@ class Balancer:
         """
         #Set limits interactively
         if set_limits:
-            self.limits = []
+            limits = []
+            square_pts=[]
             corners = ['top left', 'bottom right']
             i = 0
             search = True
@@ -108,24 +110,29 @@ class Balancer:
                 if point_ok:
                     print("Point requested: (" + str(x_motor) + "," +
                           str(y_motor) + ") : Accepted for " + corners[i])
-                else:
-                    print("Point requested: (" + str(x_motor) +
-                          "," + str(y_motor) + ") : Discarded")
-
-                if point_ok:
-                    self.limits.append((x_motor, y_motor))
+                    limits.append((x_motor, y_motor))
+                    square_pts.append((x_com, y_com))                   
                     if i == 1:
                         search = False
                     i += 1
+                else:
+                    print("Point requested: (" + str(x_motor) +
+                          "," + str(y_motor) + ") : Discarded")                  
 
-            x1 = min(self.limits[0][0], self.limits[1][0])
-            x2 = max(self.limits[0][0], self.limits[1][0])
-            y1 = min(self.limits[0][1], self.limits[1][1])
-            y2 = max(self.limits[0][1], self.limits[1][1])
+            x1 = min(limits[0][0], limits[1][0])
+            x2 = max(limits[0][0], limits[1][0])
+            y1 = min(limits[0][1], limits[1][1])
+            y2 = max(limits[0][1], limits[1][1])
+            
+            sx1 = min(square_pts[0][0], square_pts[1][0])
+            sx2 = max(square_pts[0][0], square_pts[1][0])
+            sy1 = min(square_pts[0][1], square_pts[1][1])
+            sy2 = max(square_pts[0][1], square_pts[1][1])
 
             self.motor_limits = [(x1, x2),
                                  (y1, y2)]
-            update_settings_file(motor_limits=self.motor_limits)
+            self.motor_pts = [(sx1, sy1), (sx2, sy1),(sx2, sy2),(sx1, sy2)]
+            update_settings_file(motor_limits=self.motor_limits, motor_pts=self.motor_pts)            update_settings_file(motor_limits=self.motor_limits)
             print(
                 "Motor limits set interactively [(x1,x2),(y1,y2)] : ", self.motor_limits)
         # read in motor limits from settings file
@@ -135,10 +142,11 @@ class Balancer:
                 "Motor limits from config file [(x1,x2),(y1,y2)] : ", self.motor_limits)
         
         self._update_display((self.cx, self.cy), show_motor_lims=True)
+        time.sleep(5)
 
         return self.motor_limits
 
-    def level(self, initial_iterations=10, ncalls=50, tolerance=2):
+    def level(self, iterations=10, ncalls=50, noise=4):
         """
         Control loop to try and level the shaker. Uses method to minimise the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
         by moving the motors.
@@ -148,9 +156,9 @@ class Balancer:
 
         initial_pts : List containing tuples [(x,x),(y,y)]     
         use_pts : If True the previous data in Z:\shaker_config\track.txt file containing previous levelling data will be used. Designed to allow you to continue with levelling
-        initial_iterations : Number of iterations per call (default : 10)
+        iterations : Number of iterations per call (default : 10)
         ncalls : Number of function calls (default : 50)
-        tolerance : Tolerance on the final optimization result.
+        noise : Variance on the cost function (default :4)
 
 
         ---NOTES : ----
@@ -161,7 +169,7 @@ class Balancer:
 
         """
         # Number of measurements to average to get an estimate of centre of mass of particles
-        self.iterations = initial_iterations
+        self.iterations = iterations
 
         def min_fn(new_xy_coords):
             "Adjust the motor positions to match input"
@@ -213,10 +221,11 @@ class Balancer:
         img = self.cam.get_frame()
 
         img = draw_img_axes(img)
-        img = draw_polygon(img, self.pts, color=(0, 255, 0), thickness=2)
+        boundary_pts = np.array([[pt[0], pt[1]] for pt in self.pts])
+        img = draw_polygon(img, boundary_pts, color=(0, 255, 0), thickness=2)
 
         if show_motor_lims:
-            motor_lims = [(self.motor_limits[0][0], self.motor_limits[1][0]), (self.motor_limits[0][1], self.motor_limits[1][1])]
+            square_pts = np.array([[pt[0], pt[1]] for pt in self.motor_pts])
             img = draw_polygon(img, motor_lims, color=(0, 255, 0), thickness=2)
 
 
@@ -301,13 +310,14 @@ def user_coord_request(position):
                 formatted = False
 
 
-def update_settings_file(motor_pos=None, motor_limits=None, boundary_pts=None):
+def update_settings_file(motor_pos=None, motor_limits=None, motor_pts=None, boundary_pts=None):
     try:
         with open(SETTINGS_PATH + SETTINGS_FILE) as f:
             settings = json.loads(f.read())
     except:
         settings = {'motor_pos': "0, 0",
                     'motor_limits': [(0, 0), (0, 0)],
+                    'motor_pts': [(0, 0), (0, 0)],
                     'boundary_pts': (((227, 5), (429, 7), (522, 181), (422, 349), (225, 347), (126, 174)), 325.1666666666667, 177.16666666666666),
                     'shaker_warmup_duty':550,
                     'shaker_warmup_time':2
@@ -317,6 +327,8 @@ def update_settings_file(motor_pos=None, motor_limits=None, boundary_pts=None):
         settings['motor_pos'] = motor_pos
     if motor_limits:
         settings['motor_limits'] = motor_limits
+    if motor_pts:
+        settings['motor_pts'] = motor_pts
     if boundary_pts:
         settings['boundary_pts'] = boundary_pts
 
