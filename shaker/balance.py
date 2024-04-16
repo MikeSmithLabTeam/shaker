@@ -132,12 +132,13 @@ class Balancer:
             self.motor_limits = [(x1, x2),
                                  (y1, y2)]
             self.motor_pts = [(sx1, sy1), (sx2, sy1),(sx2, sy2),(sx1, sy2)]
-            update_settings_file(motor_limits=self.motor_limits, motor_pts=self.motor_pts)            update_settings_file(motor_limits=self.motor_limits)
+            update_settings_file(motor_limits=self.motor_limits, motor_pts=self.motor_pts)            
             print(
                 "Motor limits set interactively [(x1,x2),(y1,y2)] : ", self.motor_limits)
         # read in motor limits from settings file
         else:
             self.motor_limits = update_settings_file()['motor_limits']
+            self.motor_pts = update_settings_file()['motor_pts']
             print(
                 "Motor limits from config file [(x1,x2),(y1,y2)] : ", self.motor_limits)
         
@@ -157,7 +158,7 @@ class Balancer:
         initial_pts : List containing tuples [(x,x),(y,y)]     
         use_pts : If True the previous data in Z:\shaker_config\track.txt file containing previous levelling data will be used. Designed to allow you to continue with levelling
         iterations : Number of iterations per call (default : 10)
-        ncalls : Number of function calls (default : 50)
+        ncalls : Number of function calls (default : 50). Must be greater than n_initial_points=5
         noise : Variance on the cost function (default :4)
 
 
@@ -187,7 +188,7 @@ class Balancer:
             return cost
        
         # The bit that minimises the cost function
-        result_gp = gp_minimize(min_fn, self.motor_limits, n_initial_points=6,
+        result_gp = gp_minimize(min_fn, self.motor_limits, n_initial_points=5,
                                 n_calls=ncalls, acq_optimizer="sampling", verbose=False)
 
         return result_gp
@@ -226,7 +227,7 @@ class Balancer:
 
         if show_motor_lims:
             square_pts = np.array([[pt[0], pt[1]] for pt in self.motor_pts])
-            img = draw_polygon(img, motor_lims, color=(0, 255, 0), thickness=2)
+            img = draw_polygon(img, square_pts, color=(0, 255, 0), thickness=2)
 
 
         # Centre

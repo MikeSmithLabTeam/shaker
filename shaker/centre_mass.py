@@ -1,5 +1,8 @@
 import numpy as np
 import time
+import matplotlib.pyplot as plt
+from scipy.interpolate import griddata
+from IPython.display import display, clear_output
 
 from labvision.images.cropmask import viewer
 from labvision.images import threshold, median_blur, apply_mask, mask_polygon, bgr_to_gray
@@ -131,3 +134,54 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
         img, pts, img_settings=img_processing, debug=debug)
 
     return x0, y0
+
+
+
+
+def plot_levelling(filename):
+    """Takes a track_levelling file and plots the data in 2D and 3D. The first three columns of the file are assumed to be x, y, and z coordinates. The first subplot is a scatter plot of the z coordinates against the row number. The second subplot is a 3D surface plot of the x, y, and z coordinates."""
+    track_levelling = np.loadtxt(filename, delimiter=',')
+    
+    # Create the figure and 2D subplots
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(6,6))
+
+    # Convert the first three columns of track_levelling to a numpy array
+    data = np.array(track_levelling)[:, :3]
+
+    # Split the data into x, y, and z components
+    x_motor = data[:, 0]
+    y_motor = data[:, 1]
+    cost = data[:, 2]
+
+    # Create a scatter plot in the upper subplot
+    ax[0].scatter(range(len(cost)), cost, color='r')
+    ax[0].set_title('Progress of levelling')
+    ax[0].set_xlabel('Step number')
+    ax[0].set_ylabel('Cost')
+
+    fig.delaxes(ax[1])
+    ax[1] = fig.add_subplot(2, 1, 2, projection='3d')
+
+    # Create a grid of x and y values
+    xi = np.linspace(min(x_motor), max(x_motor), 100)
+    yi = np.linspace(min(y_motor), max(y_motor), 100)
+    xi, yi = np.meshgrid(xi, yi)
+
+    # Interpolate z values on this grid
+    cost_i = griddata((x_motor, y_motor), cost, (xi, yi), method='cubic')
+
+    # Create a surface plot
+    ax[1].plot_surface(xi, yi, cost_i)
+
+    # Plot the original data points on top of the surface plot
+    ax[1].scatter(x_motor, y_motor, cost, color='r')
+
+    ax[1].set_title('Levelling progress plot')
+    ax[1].set_xlabel('X_motor')
+    ax[1].set_ylabel('Y_motor')
+    ax[1].set_zlabel('Cost')
+
+    display(fig)
+    clear_output(wait=True)
+    
+    
