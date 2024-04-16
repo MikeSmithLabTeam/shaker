@@ -134,7 +134,7 @@ class Balancer:
             print(
                 "Motor limits from config file [(x1,x2),(y1,y2)] : ", self.motor_limits)
         
-        self._update_display((self.cx, self.cy), motor_lims=True)
+        self._update_display((self.cx, self.cy), show_motor_lims=True)
 
         return self.motor_limits
 
@@ -203,19 +203,19 @@ class Balancer:
         if caller == 'min_fn':
             self.track_levelling.append(
                 [x, y, ((self.cx - x)**2+(self.cy - y)**2)**0.5, fluct_mean])
-            self._update_display((x, y), motor_lims=True)
+            self._update_display((x, y), show_motor_lims=True)
             self._update_plot()
             self._save_data()
 
         return x, y, fluct_mean
 
-    def _update_display(self, point, motor_lims=False):
+    def _update_display(self, point, show_motor_lims=False):
         img = self.cam.get_frame()
 
         img = draw_img_axes(img)
         img = draw_polygon(img, self.pts, color=(0, 255, 0), thickness=2)
 
-        if motor_lims:
+        if show_motor_lims:
             motor_lims = [(self.motor_limits[0][0], self.motor_limits[1][0]), (self.motor_limits[0][1], self.motor_limits[1][1])]
             img = draw_polygon(img, motor_lims, color=(0, 255, 0), thickness=2)
 
