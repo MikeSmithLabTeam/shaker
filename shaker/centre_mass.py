@@ -52,20 +52,44 @@ def com_balls(img, pts, img_settings=None, debug=False):
     return x0, y0
 
 
-SETTINGS_com_balls = {'img_fn': com_balls,
-                      'threshold': 87, 'invert': True, 'blur_kernel': 3}
+SETTINGS_com_balls = {
+                        'img_processing':   {
+                                            'img_fn': com_balls,
+                                            'threshold': 87, 
+                                            'invert': True, 
+                                            'blur_kernel': 3
+                                            },
+                        'shaker_settings':  {
+                                            'initial_duty': 650, 
+                                            'measure_duty': 560, 
+                                            'wait_time': 5, 
+                                            'measure_time': 10
+                                            }   
+                    }
 
 
 def com_bubble(img, pts, debug=False):
     """Needs implementing"""
+    raise NotImplementedError("com_bubble not yet implemented")
     x0 = 1
     y0 = 1
     return x0, y0
 
 
-SETTINGS_com_bubble = {'img_fn': com_bubble,
-                       'threshold': 87, 'invert': True, 'blur_kernel': 3}
-
+SETTINGS_com_bubble = {
+                        'img_processing':   {
+                                            'img_fn': com_bubble,
+                                            'threshold': 87, 
+                                            'invert': True, 
+                                            'blur_kernel': 3
+                                            },
+                        'shaker_settings':  {
+                                            'initial_duty': 650, 
+                                            'measure_duty': 560, 
+                                            'wait_time': 5, 
+                                            'measure_time': 10
+                                            }   
+                    }
 # --------------------------------------------------------------------
 """Function to control a measurement of the centre of mass of the system"""
 
