@@ -127,7 +127,7 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
 
     # take image and analyse to find centre of mass of system
     img = cam.get_frame()
-    x0, y0 = settings['img_fn'](
+    x0, y0 = img_processing['img_fn'](
         img, pts, img_settings=img_processing, debug=debug)
 
     return x0, y0

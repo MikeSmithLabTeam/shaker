@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
@@ -12,7 +13,7 @@ from .centre_mass import find_boundary, SETTINGS_com_balls, SETTINGS_com_bubble,
 # from scipy.optimize import minimize
 # Pip install my version "pip install git+https://github.com/mikesmithlab/scikit-optimize" which contains fixes
 from skopt.skopt import gp_minimize
-from labvision.images import Displayer, draw_circle
+from labvision.images import Displayer, draw_circle, draw_polygon
 
 
 class Balancer:
@@ -48,14 +49,19 @@ class Balancer:
                 "measure_fn must be com_balls or com_bubble")
 
         # Store datapoints for future use. Track_levelling are a list of x,y motor coords, expt_com is a list of particles C.O.M coords.
+        try:
+            os.remove(SETTINGS_PATH + TRACK_LEVEL)
+        except:
+            print("No previous levelling data found")
+
         self.track_levelling = [[0, 0, 0, 0]]
         self.expt_com = []
 
-        self.shaker.set_duty(500)
+        self.shaker.set_duty(update_settings_file()['shaker_warmup_duty'])
         img = self.cam.get_frame()
         self.disp = Displayer(img, title=' ')
         plt.ion()
-        self.fig, self.ax = plt.subplots(nrows=2, ncols=1, figsize=(6,6))
+        self.fig, self.ax = plt.subplots(nrows=1, ncols=1, figsize=(6,6))
 
         #Passing False means these values are drawn from file
         self.set_boundary(set_boundary_pts=False)
@@ -127,10 +133,12 @@ class Balancer:
             self.motor_limits = update_settings_file()['motor_limits']
             print(
                 "Motor limits from config file [(x1,x2),(y1,y2)] : ", self.motor_limits)
+        
+        self._update_display((self.cx, self.cy), motor_lims=True)
 
         return self.motor_limits
 
-    def level(self, use_pts=False, initial_iterations=10, ncalls=50, tolerance=2):
+    def level(self, initial_iterations=10, ncalls=50, tolerance=2):
         """
         Control loop to try and level the shaker. Uses method to minimise the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
         by moving the motors.
@@ -169,11 +177,9 @@ class Balancer:
                 self.iterations *= 1.5
 
             return cost
-
-        # This is possibly previous info gathered from a previous run stored in Z:\MikeSmithLabSharedFolder\shaker_config\track.txt
-        x0, y0 = generate_initial_pts(initial_pts=use_pts)
+       
         # The bit that minimises the cost function
-        result_gp = gp_minimize(min_fn, self.motor_limits, x0=x0, y0=y0, n_initial_points=6,
+        result_gp = gp_minimize(min_fn, self.motor_limits, n_initial_points=6,
                                 n_calls=ncalls, acq_optimizer="sampling", verbose=False)
 
         return result_gp
@@ -197,16 +203,22 @@ class Balancer:
         if caller == 'min_fn':
             self.track_levelling.append(
                 [x, y, ((self.cx - x)**2+(self.cy - y)**2)**0.5, fluct_mean])
-            self._update_display((x, y))
+            self._update_display((x, y), motor_lims=True)
             self._update_plot()
             self._save_data()
 
         return x, y, fluct_mean
 
-    def _update_display(self, point):
+    def _update_display(self, point, motor_lims=False):
         img = self.cam.get_frame()
 
         img = draw_img_axes(img)
+        img = draw_polygon(img, self.pts, color=(0, 255, 0), thickness=2)
+
+        if motor_lims:
+            motor_lims = [(self.motor_limits[0][0], self.motor_limits[1][0]), (self.motor_limits[0][1], self.motor_limits[1][1])]
+            img = draw_polygon(img, motor_lims, color=(0, 255, 0), thickness=2)
+
 
         # Centre
         img = draw_circle(img, self.cx, self.cy,
@@ -274,9 +286,10 @@ def get_yes_no_input():
 def user_coord_request(position):
     app = QApplication([])
     formatted = False
+    text_coords = update_settings_file()['motor_pos']
     while not formatted:
         text_coords, ok = QInputDialog.getText(None, "Set Coordinates", "Set coords for " + position +
-                                               " for integer x and y motor positions: x, y")
+                                               " for integer x and y motor positions: x, y", text=text_coords)
         if ok:
             try:
                 x, y = text_coords.split(',')
@@ -288,27 +301,6 @@ def user_coord_request(position):
                 formatted = False
 
 
-def generate_initial_pts(initial_pts=False):
-    """Takes 2 points assumed to be upper left and bottom right of centre and generates
-    some initial values to feed to the minimiser
-
-    initial_pts : List containing tuples. [(x, x), (y, y)]    
-    """
-    if initial_pts:
-        # read in final x,y level from "track_level.txt" file
-        with open(SETTINGS_PATH + "track_level.txt", "r") as file:
-            level_data = file.read()
-            x_final_level = round(float(level_data[-75:-51]))
-            y_final_level = round(float(level_data[-50:-26]))
-            initial_pts = (x_final_level, y_final_level)
-            costs = level_data[-24:]
-            costs = round(float(costs))
-    else:
-        initial_pts = None
-        costs = None
-    return initial_pts, costs
-
-
 def update_settings_file(motor_pos=None, motor_limits=None, boundary_pts=None):
     try:
         with open(SETTINGS_PATH + SETTINGS_FILE) as f:
@@ -316,7 +308,9 @@ def update_settings_file(motor_pos=None, motor_limits=None, boundary_pts=None):
     except:
         settings = {'motor_pos': "0, 0",
                     'motor_limits': [(0, 0), (0, 0)],
-                    'boundary_pts': (((227, 5), (429, 7), (522, 181), (422, 349), (225, 347), (126, 174)), 325.1666666666667, 177.16666666666666)
+                    'boundary_pts': (((227, 5), (429, 7), (522, 181), (422, 349), (225, 347), (126, 174)), 325.1666666666667, 177.16666666666666),
+                    'shaker_warmup_duty':550,
+                    'shaker_warmup_time':2
                     }
 
     if motor_pos:
