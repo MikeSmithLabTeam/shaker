@@ -21,7 +21,7 @@ class Balancer:
 
         shaker an instance of Shaker() which controls vibration of shaker
         camera an instance of Camera() which allows pictures of experiment to be taken
-        motors an instance of motors - usually Stepper()
+        motors an instance of motors - usually stepperXY()
         measure_fn - image processing function that takes an image and returns the x,y coordinates of the centre of mass of the particles.
 
         Optional:
@@ -29,7 +29,7 @@ class Balancer:
 
         The basic principle is find the centre of the experiment by manually selecting the boundary.
         Type of boundary is defined by shape. The balancer then compares the centre as defined manually 
-        and the centre as calculated on an image using centre_pt_fn. It then adjusts motors iteratively
+        and the centre as calculated on an image. It then adjusts motors iteratively
         to move the measured and actual centre closer together.
 
         """
@@ -79,6 +79,8 @@ class Balancer:
         limits the area searched later when automatically levelling.
 
         motor_limits : List containing tuples [(x1,x2),(y1,y2)]
+
+        These are stored in shaker_config/shaker1_params.txt file and can be read in later.
         """
         #Set limits interactively
         if set_limits:
