@@ -43,6 +43,7 @@ def plot_acceleration_calibration():
     """Quick function to look at calibration curve for accelerometer attached to shaker"""
     df = pd.read_csv(SETTINGS_PATH + ACCELEROMETER_FILE)
     plt.plot(df['duty_cycle'], df['acceleration'],'r-')
+    plt.plot(df['duty_cycle'], df['acceleration'],'kx')
     plt.xlabel('Duty Cycle')
     plt.ylabel('Acceleration')
     plt.title('Calibration Curve')

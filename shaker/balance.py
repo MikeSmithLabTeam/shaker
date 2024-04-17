@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
 import json
 import cv2
+from tqdm import tqdm
 from IPython.display import display, clear_output
 
 from .settings import SETTINGS_PATH, SETTINGS_FILE, TRACK_LEVEL
@@ -15,6 +16,8 @@ from .centre_mass import find_boundary, SETTINGS_com_balls, SETTINGS_com_bubble,
 # Pip install my version "pip install git+https://github.com/mikesmithlab/scikit-optimize" which contains fixes
 from skopt.skopt import gp_minimize
 from labvision.images import Displayer, draw_circle, draw_polygon, write_img
+
+
 
 
 class Balancer:
@@ -167,13 +170,17 @@ class Balancer:
         track.txt file is formatted as :
 
                     [x_level_data],[y_level_data],[cost]
-
+        
 
         """
         # Number of measurements to average to get an estimate of centre of mass of particles
+        progress_bar = tqdm(total=ncalls)
+
         self.iterations = iterations
 
         def min_fn(new_xy_coords):
+            progress_bar.update(1)
+
             "Adjust the motor positions to match input"
             self.motors.movexy(new_xy_coords[0], new_xy_coords[1])
 
@@ -188,8 +195,11 @@ class Balancer:
         # The bit that minimises the cost function
         result_gp = gp_minimize(min_fn, self.motor_limits, n_initial_points=5,
                                 n_calls=ncalls, acq_optimizer="sampling", verbose=False)
+        
+        progress_bar.close()
+        
         self._prep_expt(result_gp)
-
+        
         return result_gp
 
     def _measure(self, caller='other', *args):
