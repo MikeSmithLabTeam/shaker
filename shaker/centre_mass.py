@@ -139,9 +139,11 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
     return x0, y0
 
 
-def plot_levelling(filename):
-    """Takes a track_levelling file and plots the data in 2D and 3D. The first three columns of the file are assumed to be x, y, and z coordinates. The first subplot is a scatter plot of the z coordinates against the row number. The second subplot is a 3D surface plot of the x, y, and z coordinates."""
-    track_levelling = np.loadtxt(filename, delimiter=',')
+def plot_levelling(folder, tracking_filename, img_filename):
+    """Takes a track_levelling file and plots the data in 2D and 3D. The first three columns of the file are assumed to be x, y, and z coordinates. The first subplot is a scatter plot of the z coordinates against the row number. The second subplot is a 3D surface plot of the x, y, and z coordinates.
+    folder should end in a /
+    """
+    track_levelling = np.loadtxt(folder + tracking_filename, delimiter=',')
 
     # Create the figure and 2D subplots
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(6, 6))
@@ -187,7 +189,7 @@ def plot_levelling(filename):
     ax[1][0].set_ylabel('Y_motor')
     ax[1][0].set_zlabel('Cost')
 
-    img = imread(SETTINGS_PATH + TRACK_LEVEL[:-4] + '.png')
+    img = imread(folder + img_filename)
     ax_img.imshow(img)
 
     # display(fig)
