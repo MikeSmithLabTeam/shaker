@@ -1,5 +1,6 @@
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import time
@@ -7,7 +8,8 @@ import time
 from labequipment.accelerometer import pk_acceleration
 from .shaker import Shaker
 from labequipment.arduino import Arduino
-from .settings import ACCELEROMETER_SHAKER
+from .settings import SETTINGS_PATH, ACCELEROMETER_SHAKER, ACCELEROMETER_FILE
+
 
 def calibrate_accelerometer(start=250, stop=750, step=25):
     """
@@ -23,7 +25,7 @@ def calibrate_accelerometer(start=250, stop=750, step=25):
     acceleration_measurements [numpy array] : array containing peak_z acceleration measurements
     """
 
-    with Shaker() as shaker, Arduino(ACCELEROMETER_SHAKER1) as acc_obj:
+    with Shaker() as shaker, Arduino(ACCELEROMETER_SHAKER) as acc_obj:
         peak_z = pk_acceleration(acc_obj)                                   #measure acceleration
         shaker.set_duty(0)                                                  #set duty
         duty_cycles = np.arange(start,stop,step)
@@ -36,6 +38,16 @@ def calibrate_accelerometer(start=250, stop=750, step=25):
         acceleration_measurements = np.array(acceleration_measurements)
 
     return duty_cycles, acceleration_measurements
+
+def plot_acceleration_calibration():  
+    """Quick function to look at calibration curve for accelerometer attached to shaker"""
+    df = pd.read_csv(SETTINGS_PATH + ACCELEROMETER_FILE)
+    plt.plot(df['duty_cycle'], df['acceleration'],'r-')
+    plt.xlabel('Duty Cycle')
+    plt.ylabel('Acceleration')
+    plt.title('Calibration Curve')
+    plt.show()
+    
 
 #code to run a calibration cycle
 if __name__ == "__main__":
