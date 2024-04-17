@@ -2,6 +2,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
+from matplotlib import gridspec
 from IPython.display import display, clear_output
 from matplotlib.image import imread
 
@@ -146,10 +147,10 @@ def plot_levelling(folder, tracking_filename, img_filename):
     track_levelling = np.loadtxt(folder + tracking_filename, delimiter=',')
 
     # Create the figure and 2D subplots
-    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(6, 6))
-    fig.delaxes(ax[0][1])
-    fig.delaxes(ax[1][1])
-    ax_img = fig.add_subplot(1, 2, 2)
+    gs = gridspec.GridSpec(2, 1, height_ratios=[1, 2])
+    fig= plt.figure(figsize=(8, 8))
+    ax0 = plt.subplot(gs[0])
+    ax1 = fig.add_subplot(gs[1], projection='3d')   
 
     # Convert the first three columns of track_levelling to a numpy array
     data = np.array(track_levelling)
@@ -161,14 +162,13 @@ def plot_levelling(folder, tracking_filename, img_filename):
     fluctuations = data[:, 3]
 
     # Create a scatter plot in the upper subplot
-    ax[0][0].errorbar(np.arange(0, np.size(cost)), cost, yerr=fluctuations, fmt='o',
+    ax0.errorbar(np.arange(0, np.size(cost)), cost, yerr=fluctuations, fmt='o',
                       ecolor='black', elinewidth=1, markerfacecolor='red', markeredgecolor='black')
-    ax[0][0].set_title('Progress of levelling')
-    ax[0][0].set_xlabel('Step number')
-    ax[0][0].set_ylabel('Cost')
+    ax0.set_title('Progress of levelling')
+    ax0.set_xlabel('Step number')
+    ax0.set_ylabel('Cost')
 
-    fig.delaxes(ax[1])
-    ax[1][0] = fig.add_subplot(2, 1, 2, projection='3d')
+    
 
     # Create a grid of x and y values
     xi = np.linspace(min(x_motor), max(x_motor), 100)
@@ -178,16 +178,19 @@ def plot_levelling(folder, tracking_filename, img_filename):
     # Interpolate z values on this grid
     cost_i = griddata((x_motor, y_motor), cost, (xi, yi), method='cubic')
 
+
     # Create a surface plot
-    ax[1][0].plot_surface(xi, yi, cost_i)
+    ax1.plot_surface(xi, yi, cost_i)
 
     # Plot the original data points on top of the surface plot
-    ax[1][0].scatter(x_motor, y_motor, cost, color='r')
+    ax1.scatter(x_motor, y_motor, cost, color='r')
 
-    ax[1][0].set_title('Levelling progress plot')
-    ax[1][0].set_xlabel('X_motor')
-    ax[1][0].set_ylabel('Y_motor')
-    ax[1][0].set_zlabel('Cost')
+    ax1.set_title('Levelling progress plot')
+    ax1.set_xlabel('X_motor')
+    ax1.set_ylabel('Y_motor')
+    ax1.set_zlabel('Cost')
+
+    fig2, ax_img = plt.subplots()
 
     img = imread(folder + img_filename)
     ax_img.imshow(img)
