@@ -56,19 +56,19 @@ def com_balls(img, pts, img_settings=None, debug=False):
 
 
 SETTINGS_com_balls = {
-                        'img_processing':   {
-                                            'img_fn': com_balls,
-                                            'threshold': 87, 
-                                            'invert': True, 
-                                            'blur_kernel': 3
-                                            },
-                        'shaker_settings':  {
-                                            'initial_duty': 650, 
-                                            'measure_duty': 560, 
-                                            'wait_time': 5, 
-                                            'measure_time': 10
-                                            }   
-                    }
+    'img_processing':   {
+        'img_fn': com_balls,
+        'threshold': 87,
+        'invert': True,
+        'blur_kernel': 3
+    },
+    'shaker_settings':  {
+        'initial_duty': 650,
+        'measure_duty': 560,
+        'wait_time': 5,
+        'measure_time': 10
+    }
+}
 
 
 def com_bubble(img, pts, debug=False):
@@ -80,19 +80,19 @@ def com_bubble(img, pts, debug=False):
 
 
 SETTINGS_com_bubble = {
-                        'img_processing':   {
-                                            'img_fn': com_bubble,
-                                            'threshold': 87, 
-                                            'invert': True, 
-                                            'blur_kernel': 3
-                                            },
-                        'shaker_settings':  {
-                                            'initial_duty': 650, 
-                                            'measure_duty': 560, 
-                                            'wait_time': 5, 
-                                            'measure_time': 10
-                                            }   
-                    }
+    'img_processing':   {
+        'img_fn': com_bubble,
+        'threshold': 87,
+        'invert': True,
+        'blur_kernel': 3
+    },
+    'shaker_settings':  {
+        'initial_duty': 650,
+        'measure_duty': 560,
+        'wait_time': 5,
+        'measure_time': 10
+    }
+}
 # --------------------------------------------------------------------
 """Function to control a measurement of the centre of mass of the system"""
 
@@ -136,25 +136,25 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
     return x0, y0
 
 
-
-
 def plot_levelling(filename):
     """Takes a track_levelling file and plots the data in 2D and 3D. The first three columns of the file are assumed to be x, y, and z coordinates. The first subplot is a scatter plot of the z coordinates against the row number. The second subplot is a 3D surface plot of the x, y, and z coordinates."""
     track_levelling = np.loadtxt(filename, delimiter=',')
-    
+
     # Create the figure and 2D subplots
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(6,6))
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(6, 6))
 
     # Convert the first three columns of track_levelling to a numpy array
-    data = np.array(track_levelling)[:, :3]
+    data = np.array(track_levelling)
 
     # Split the data into x, y, and z components
     x_motor = data[:, 0]
     y_motor = data[:, 1]
     cost = data[:, 2]
+    fluctuations = data[:, 3]
 
     # Create a scatter plot in the upper subplot
-    ax[0].scatter(range(len(cost)), cost, color='r')
+    ax[0].errorbar(np.arange(0, np.size(cost)), cost, yerr=fluctuations, fmt='o',
+                   ecolor='black', elinewidth=1, markerfacecolor='red', markeredgecolor='black')
     ax[0].set_title('Progress of levelling')
     ax[0].set_xlabel('Step number')
     ax[0].set_ylabel('Cost')
@@ -181,7 +181,6 @@ def plot_levelling(filename):
     ax[1].set_ylabel('Y_motor')
     ax[1].set_zlabel('Cost')
 
-    display(fig)
-    clear_output(wait=True)
-    
-    
+    # display(fig)
+    # clear_output(wait=True)
+    plt.show()
