@@ -11,6 +11,7 @@ from labvision.images import threshold, median_blur, apply_mask, mask_polygon, b
 from labvision.camera.camera_config import CameraType
 
 from .balance import update_settings_file
+from .settings import SETTINGS_PATH, TRACK_LEVEL
 
 panasonic = CameraType.PANASONICHCX1000  # creating camera object.
 
