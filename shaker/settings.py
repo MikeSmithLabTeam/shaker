@@ -1,12 +1,12 @@
-shaker_arduino = {"PORT": "COM5",
+SHAKER_ARDUINO = {"PORT": "COM5",
                   "BAUDRATE": 115200
                   }
 
-stepper_arduino = {"PORT": "COM4",
+STEPPER_ARDUINO = {"PORT": "COM4",
                    "BAUDRATE": 115200
                    }
 
-accelerometer_shaker = {"PORT": "COM8",
+ACCELEROMETER_SHAKER = {"PORT": "COM3",
                         "BAUDRATE": 9600
                         }
 
@@ -17,3 +17,4 @@ SETTINGS_FILE = "shaker1_params.txt"
 ACCELEROMETER_FILE = "shaker1_accelerometer.csv"
 
 TRACK_LEVEL = "shaker1_level.txt"
+

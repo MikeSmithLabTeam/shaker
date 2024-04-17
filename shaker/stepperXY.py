@@ -3,7 +3,7 @@ import numpy as np
 
 from labequipment import stepper
 from labequipment.arduino import Arduino
-from .settings import stepper_arduino
+from .settings import STEPPER_ARDUINO
 from .balance import update_settings_file
 
 
@@ -44,7 +44,7 @@ class StepperXY(stepper.Stepper):
 
     def __init__(self):
         print("stepperxy init")
-        ard = Arduino(stepper_arduino)
+        ard = Arduino(STEPPER_ARDUINO)
         super().__init__(ard)
 
         # read initial positions from file and put in self.x and self.y

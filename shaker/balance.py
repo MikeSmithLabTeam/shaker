@@ -1,5 +1,4 @@
 import os
-import shutil
 import time
 import numpy as np
 import matplotlib.pyplot as plt

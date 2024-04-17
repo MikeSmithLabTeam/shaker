@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 from labequipment.arduino import Arduino
-from .settings import shaker_arduino
+from .settings import SHAKER_ARDUINO
 
 
 class Shaker:
@@ -26,7 +26,7 @@ class Shaker:
     """
     def __init__(self):
         print("shaker init")
-        self.power = Arduino(shaker_arduino) 
+        self.power = Arduino(SHAKER_ARDUINO) 
         self.switch_serial_mode()
 
     def switch_serial_mode(self):

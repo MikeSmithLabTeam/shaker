@@ -7,7 +7,7 @@ import time
 from labequipment.accelerometer import pk_acceleration
 from .shaker import Shaker
 from labequipment.arduino import Arduino
-from .settings import accelerometer_shaker
+from .settings import ACCELEROMETER_SHAKER
 
 def calibrate_accelerometer(start=250, stop=750, step=25):
     """
@@ -23,7 +23,7 @@ def calibrate_accelerometer(start=250, stop=750, step=25):
     acceleration_measurements [numpy array] : array containing peak_z acceleration measurements
     """
 
-    with Shaker() as shaker, Arduino(accelerometer_shaker) as acc_obj:
+    with Shaker() as shaker, Arduino(ACCELEROMETER_SHAKER1) as acc_obj:
         peak_z = pk_acceleration(acc_obj)                                   #measure acceleration
         shaker.set_duty(0)                                                  #set duty
         duty_cycles = np.arange(start,stop,step)
