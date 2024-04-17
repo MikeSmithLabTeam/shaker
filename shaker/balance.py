@@ -197,7 +197,7 @@ class Balancer:
                                 n_calls=ncalls, acq_optimizer="sampling", verbose=False)
         
         progress_bar.close()
-        
+
         self._prep_expt(result_gp)
         
         return result_gp
@@ -284,9 +284,12 @@ class Balancer:
             np.savetxt(f, np.array([self.track_levelling[-1]]), delimiter=",")
 
 
+
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
 --------------------------------------------------------------------------------------------------------------------------"""
+
+
 
 
 def draw_img_axes(img):

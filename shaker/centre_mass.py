@@ -10,6 +10,8 @@ from labvision.images.cropmask import viewer
 from labvision.images import threshold, median_blur, apply_mask, mask_polygon, bgr_to_gray
 from labvision.camera.camera_config import CameraType
 
+from .balance import update_settings_file
+
 panasonic = CameraType.PANASONICHCX1000  # creating camera object.
 
 # --------------------------------------------------------------------
@@ -136,6 +138,27 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
         img, pts, img_settings=img_processing, debug=debug)
 
     return x0, y0
+
+def refine_motor_limits(levelling_file=SETTINGS_PATH + TRACK_LEVEL):
+    """This function takes the levelling data and refines the motor limits to be used in the levelling process. It does this by taking the minimum and maximum values of the motor positions in the levelling data and adds a buffer of 10% of the range to the limits. This is to ensure that the motors do not go to the absolute limit of their range. The new limits are saved in the settings file.
+    """
+    levelling_data = np.loadtxt(levelling_file, delimiter=',')
+    x_motor = levelling_data[:, 0]
+    y_motor = levelling_data[:, 1]
+    cost = levelling_data[:, 2]
+    fluctuations = levelling_data[:, 3]
+
+    mean_fluctuation = np.mean(fluctuations)
+
+    xmin = x_motor[-1] - (4*mean_fluctuation)
+    xmax = x_motor[-1] + (4*mean_fluctuation)
+    ymin = y_motor[-1] - (4*mean_fluctuation)
+    ymax = y_motor[-1] + (4*mean_fluctuation)
+    
+    motor_limits = [[xmin, xmax], [ymin, ymax]]
+    update_settings_file(motor_limits=motor_limits)
+
+    return motor_limits
 
 
 def plot_levelling(folder, tracking_filename, img_filename):
