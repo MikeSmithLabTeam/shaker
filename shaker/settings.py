@@ -14,4 +14,6 @@ SETTINGS_PATH = "Z:/shaker_config/"
 
 SETTINGS_FILE = "shaker1_params.txt"
 
+ACCELEROMETER_FILE = "shaker1_accelerometer.csv"
+
 TRACK_LEVEL = "shaker1_level.txt"

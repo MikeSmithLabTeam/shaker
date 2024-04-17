@@ -3,10 +3,13 @@ import time
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
 from IPython.display import display, clear_output
+from matplotlib.image import imread
 
 from labvision.images.cropmask import viewer
 from labvision.images import threshold, median_blur, apply_mask, mask_polygon, bgr_to_gray
 from labvision.camera.camera_config import CameraType
+
+from shaker.settings import SETTINGS_PATH, TRACK_LEVEL
 
 panasonic = CameraType.PANASONICHCX1000  # creating camera object.
 
@@ -141,7 +144,10 @@ def plot_levelling(filename):
     track_levelling = np.loadtxt(filename, delimiter=',')
 
     # Create the figure and 2D subplots
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(6, 6))
+    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(6, 6))
+    fig.delaxes(ax[0][1])
+    fig.delaxes(ax[1][1])
+    ax_img = fig.add_subplot(1, 2, 2)
 
     # Convert the first three columns of track_levelling to a numpy array
     data = np.array(track_levelling)
@@ -153,14 +159,14 @@ def plot_levelling(filename):
     fluctuations = data[:, 3]
 
     # Create a scatter plot in the upper subplot
-    ax[0].errorbar(np.arange(0, np.size(cost)), cost, yerr=fluctuations, fmt='o',
-                   ecolor='black', elinewidth=1, markerfacecolor='red', markeredgecolor='black')
-    ax[0].set_title('Progress of levelling')
-    ax[0].set_xlabel('Step number')
-    ax[0].set_ylabel('Cost')
+    ax[0][0].errorbar(np.arange(0, np.size(cost)), cost, yerr=fluctuations, fmt='o',
+                      ecolor='black', elinewidth=1, markerfacecolor='red', markeredgecolor='black')
+    ax[0][0].set_title('Progress of levelling')
+    ax[0][0].set_xlabel('Step number')
+    ax[0][0].set_ylabel('Cost')
 
     fig.delaxes(ax[1])
-    ax[1] = fig.add_subplot(2, 1, 2, projection='3d')
+    ax[1][0] = fig.add_subplot(2, 1, 2, projection='3d')
 
     # Create a grid of x and y values
     xi = np.linspace(min(x_motor), max(x_motor), 100)
@@ -171,15 +177,18 @@ def plot_levelling(filename):
     cost_i = griddata((x_motor, y_motor), cost, (xi, yi), method='cubic')
 
     # Create a surface plot
-    ax[1].plot_surface(xi, yi, cost_i)
+    ax[1][0].plot_surface(xi, yi, cost_i)
 
     # Plot the original data points on top of the surface plot
-    ax[1].scatter(x_motor, y_motor, cost, color='r')
+    ax[1][0].scatter(x_motor, y_motor, cost, color='r')
 
-    ax[1].set_title('Levelling progress plot')
-    ax[1].set_xlabel('X_motor')
-    ax[1].set_ylabel('Y_motor')
-    ax[1].set_zlabel('Cost')
+    ax[1][0].set_title('Levelling progress plot')
+    ax[1][0].set_xlabel('X_motor')
+    ax[1][0].set_ylabel('Y_motor')
+    ax[1][0].set_zlabel('Cost')
+
+    img = imread(SETTINGS_PATH + TRACK_LEVEL[:-4] + '.png')
+    ax_img.imshow(img)
 
     # display(fig)
     # clear_output(wait=True)

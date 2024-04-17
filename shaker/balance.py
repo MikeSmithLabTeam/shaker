@@ -1,4 +1,5 @@
 import os
+import shutil
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,7 +15,7 @@ from .centre_mass import find_boundary, SETTINGS_com_balls, SETTINGS_com_bubble,
 # from scipy.optimize import minimize
 # Pip install my version "pip install git+https://github.com/mikesmithlab/scikit-optimize" which contains fixes
 from skopt.skopt import gp_minimize
-from labvision.images import Displayer, draw_circle, draw_polygon
+from labvision.images import Displayer, draw_circle, draw_polygon, write_img
 
 
 class Balancer:
@@ -62,9 +63,9 @@ class Balancer:
         img = self.cam.get_frame()
         self.disp = Displayer(img, title=' ')
         plt.ion()
-        self.fig, self.ax = plt.subplots(nrows=1, ncols=1, figsize=(6,6))
+        self.fig, self.ax = plt.subplots(nrows=1, ncols=1, figsize=(6, 6))
 
-        #Passing False means these values are drawn from file
+        # Passing False means these values are drawn from file
         self.set_boundary(set_boundary_pts=False)
         self.set_motor_limits(set_limits=False)
 
@@ -89,10 +90,10 @@ class Balancer:
 
         These are stored in shaker_config/shaker1_params.txt file and can be read in later.
         """
-        #Set limits interactively
+        # Set limits interactively
         if set_limits:
             limits = []
-            square_pts=[]
+            square_pts = []
             corners = ['top left', 'bottom right']
             i = 0
             search = True
@@ -111,19 +112,19 @@ class Balancer:
                     print("Point requested: (" + str(x_motor) + "," +
                           str(y_motor) + ") : Accepted for " + corners[i])
                     limits.append((x_motor, y_motor))
-                    square_pts.append((x_com, y_com))                   
+                    square_pts.append((x_com, y_com))
                     if i == 1:
                         search = False
                     i += 1
                 else:
                     print("Point requested: (" + str(x_motor) +
-                          "," + str(y_motor) + ") : Discarded")                  
+                          "," + str(y_motor) + ") : Discarded")
 
             x1 = min(limits[0][0], limits[1][0])
             x2 = max(limits[0][0], limits[1][0])
             y1 = min(limits[0][1], limits[1][1])
             y2 = max(limits[0][1], limits[1][1])
-            
+
             sx1 = min(square_pts[0][0], square_pts[1][0])
             sx2 = max(square_pts[0][0], square_pts[1][0])
             sy1 = min(square_pts[0][1], square_pts[1][1])
@@ -131,8 +132,9 @@ class Balancer:
 
             self.motor_limits = [(x1, x2),
                                  (y1, y2)]
-            self.motor_pts = [(sx1, sy1), (sx2, sy1),(sx2, sy2),(sx1, sy2)]
-            update_settings_file(motor_limits=self.motor_limits, motor_pts=self.motor_pts)            
+            self.motor_pts = [(sx1, sy1), (sx2, sy1), (sx2, sy2), (sx1, sy2)]
+            update_settings_file(
+                motor_limits=self.motor_limits, motor_pts=self.motor_pts)
             print(
                 "Motor limits set interactively [(x1,x2),(y1,y2)] : ", self.motor_limits)
         # read in motor limits from settings file
@@ -141,13 +143,13 @@ class Balancer:
             self.motor_pts = update_settings_file()['motor_pts']
             print(
                 "Motor limits from config file [(x1,x2),(y1,y2)] : ", self.motor_limits)
-        
+
         self._update_display((self.cx, self.cy), show_motor_lims=True)
         time.sleep(5)
 
         return self.motor_limits
 
-    def level(self, iterations=10, ncalls=50, noise=4):
+    def level(self, iterations=10, ncalls=50):
         """
         Control loop to try and level the shaker. Uses method to minimise the distance between centre of system (cx,cy) and the centre of mass of the particles in the image (x,y)
         by moving the motors.
@@ -182,14 +184,12 @@ class Balancer:
             # Work out how far away com is from centre
             cost = ((self.cx - x)**2+(self.cy - y)**2)**0.5
 
-            if (cost > tolerance) & (fluctuations > cost):
-                self.iterations *= 1.5
-
             return cost
-       
+
         # The bit that minimises the cost function
         result_gp = gp_minimize(min_fn, self.motor_limits, n_initial_points=5,
                                 n_calls=ncalls, acq_optimizer="sampling", verbose=False)
+        self._prep_expt(result_gp)
 
         return result_gp
 
@@ -198,7 +198,8 @@ class Balancer:
         xvals = []
         yvals = []
         for _ in range(int(self.iterations)):
-            x0, y0 = measure_com(self.cam, self.shaker, self.pts, settings=self.com_settings, debug=False)
+            x0, y0 = measure_com(
+                self.cam, self.shaker, self.pts, settings=self.com_settings, debug=False)
             xvals.append(x0)
             yvals.append(y0)
             self.measurement_counter += 1
@@ -218,6 +219,15 @@ class Balancer:
 
         return x, y, fluct_mean
 
+    def _prep_expt(self, result_gp):
+        """Once the levelling is complete, we want to prepare for the experiment. Move motors to optimum position and save copy of all the data."""
+        # Get the best motor positions from the optimisation
+        x, y = result_gp.x
+        self.motors.movexy(x, y)
+        img = self._update_display((x, y), show_motor_lims=True)
+        write_img(img, SETTINGS_PATH +
+                  TRACK_LEVEL[:-4] + '.png')
+
     def _update_display(self, point, show_motor_lims=False):
         img = self.cam.get_frame()
 
@@ -228,7 +238,6 @@ class Balancer:
         if show_motor_lims:
             square_pts = np.array([[pt[0], pt[1]] for pt in self.motor_pts])
             img = draw_polygon(img, square_pts, color=(0, 255, 0), thickness=2)
-
 
         # Centre
         img = draw_circle(img, self.cx, self.cy,
@@ -249,10 +258,12 @@ class Balancer:
         self.disp.window_name = 'Levelling : (X_motor, Y_motor), (x_com, y_com), (cx, cy) : (' + str(self.motors.x) + ',' + str(
             self.motors.y) + '), (' + str(point[0]) + ',' + str(point[1]) + '), (' + str(self.cx) + ',' + str(self.cy) + ')'
         self.disp.update_im(img)
+        return img
 
     def _update_plot(self):
         x = range(len(self.track_levelling))
-        self.ax.errorbar(x[-1], self.track_levelling[-1][-2], yerr=self.track_levelling[-1][-1], fmt='o', ecolor='black', elinewidth=1, markerfacecolor='red', markeredgecolor='black')
+        self.ax.errorbar(x[-1], self.track_levelling[-1][-2], yerr=self.track_levelling[-1][-1],
+                         fmt='o', ecolor='black', elinewidth=1, markerfacecolor='red', markeredgecolor='black')
         self.ax.set_title('Levelling progress plot')
         self.ax.set_xlabel('Iteration')
         self.ax.set_ylabel('Cost')
@@ -320,8 +331,8 @@ def update_settings_file(motor_pos=None, motor_limits=None, motor_pts=None, boun
                     'motor_limits': [(0, 0), (0, 0)],
                     'motor_pts': [(0, 0), (0, 0)],
                     'boundary_pts': (((227, 5), (429, 7), (522, 181), (422, 349), (225, 347), (126, 174)), 325.1666666666667, 177.16666666666666),
-                    'shaker_warmup_duty':550,
-                    'shaker_warmup_time':2
+                    'shaker_warmup_duty': 550,
+                    'shaker_warmup_time': 2
                     }
 
     if motor_pos:
