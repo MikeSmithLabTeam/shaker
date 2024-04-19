@@ -50,8 +50,8 @@ def plot_levelling(folder, tracking_filename, img_filename):
     # Split the data into x, y, and z components
     x_motor = data[:, 0]
     y_motor = data[:, 1]
-    cost = data[:, 2]
-    fluctuations = data[:, 3]
+    cost = data[:, 4]
+    fluctuations = data[:, 5]
 
     # Create a scatter plot in the upper subplot
     ax0.errorbar(np.arange(0, np.size(cost)), cost, yerr=fluctuations, fmt='o',

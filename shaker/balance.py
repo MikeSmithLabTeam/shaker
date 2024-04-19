@@ -212,7 +212,7 @@ class Balancer:
 
         if caller == 'min_fn':
             self.track_levelling.append(
-                [x, y, ((self.cx - x)**2+(self.cy - y)**2)**0.5, fluct_mean])
+                [self.motors.x, self.motors.y, x, y, ((self.cx - x)**2+(self.cy - y)**2)**0.5, fluct_mean])
             self._update_display((x, y), show_motor_lims=True)
             self._update_plot()
             self._save_data()
