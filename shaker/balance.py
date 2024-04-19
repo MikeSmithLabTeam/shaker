@@ -9,6 +9,7 @@ from tqdm import tqdm
 from IPython.display import display, clear_output
 
 from .settings import SETTINGS_PATH, SETTINGS_FILE, TRACK_LEVEL
+from .plotting import update_plot, draw_img_axes
 from .centre_mass import find_boundary, SETTINGS_com_balls, SETTINGS_com_bubble, measure_com
 
 
@@ -270,14 +271,8 @@ class Balancer:
         return img
 
     def _update_plot(self):
-        x = range(len(self.track_levelling))
-        self.ax.errorbar(x[-1], self.track_levelling[-1][-2], yerr=self.track_levelling[-1][-1],
-                         fmt='o', ecolor='black', elinewidth=1, markerfacecolor='red', markeredgecolor='black')
-        self.ax.set_title('Levelling progress plot')
-        self.ax.set_xlabel('Iteration')
-        self.ax.set_ylabel('Cost')
-        display(self.fig)
-        clear_output(wait=True)
+        update_plot(fig, ax, track_levelling)
+        
 
     def _save_data(self):
         with open(SETTINGS_PATH + TRACK_LEVEL, 'a') as f:
@@ -288,23 +283,6 @@ class Balancer:
 """------------------------------------------------------------------------------------------------------------------------
 Helper functions
 --------------------------------------------------------------------------------------------------------------------------"""
-
-
-
-
-def draw_img_axes(img):
-    # Draw axes
-    sz = np.shape(img)
-    img = cv2.arrowedLine(img, (int(
-        0.05*sz[1]), int(0.95*sz[0])), (int(0.25*sz[1]), int(0.95*sz[0])), (0, 0, 255), 3)
-    img = cv2.arrowedLine(img, (int(
-        0.05*sz[1]), int(0.95*sz[0])), (int(0.05*sz[1]), int(0.75*sz[0])), (0, 0, 255), 3)
-    img = cv2.putText(img, "X", (int(
-        0.275*sz[1]), int(0.95*sz[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-    img = cv2.putText(img, "Y", (int(
-        0.05*sz[1]), int(0.725*sz[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-    return img
-
 
 def get_yes_no_input():
     app = QApplication([])

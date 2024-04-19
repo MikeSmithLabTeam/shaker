@@ -1,10 +1,6 @@
 import numpy as np
 import time
-import matplotlib.pyplot as plt
-from scipy.interpolate import griddata
-from matplotlib import gridspec
-from IPython.display import display, clear_output
-from matplotlib.image import imread
+
 
 from labvision.images.cropmask import viewer
 from labvision.images import threshold, median_blur, apply_mask, mask_polygon, bgr_to_gray
@@ -163,59 +159,3 @@ def refine_motor_limits(levelling_file=SETTINGS_PATH + TRACK_LEVEL):
     return motor_limits
 
 
-def plot_levelling(folder, tracking_filename, img_filename):
-    """Takes a track_levelling file and plots the data in 2D and 3D. The first three columns of the file are assumed to be x, y, and z coordinates. The first subplot is a scatter plot of the z coordinates against the row number. The second subplot is a 3D surface plot of the x, y, and z coordinates.
-    folder should end in a /
-    """
-    track_levelling = np.loadtxt(folder + tracking_filename, delimiter=',')
-
-    # Create the figure and 2D subplots
-    gs = gridspec.GridSpec(2, 1, height_ratios=[1, 2])
-    fig = plt.figure(figsize=(8, 8))
-    ax0 = plt.subplot(gs[0])
-    ax1 = fig.add_subplot(gs[1], projection='3d')
-
-    # Convert the first three columns of track_levelling to a numpy array
-    data = np.array(track_levelling)
-
-    # Split the data into x, y, and z components
-    x_motor = data[:, 0]
-    y_motor = data[:, 1]
-    cost = data[:, 2]
-    fluctuations = data[:, 3]
-
-    # Create a scatter plot in the upper subplot
-    ax0.errorbar(np.arange(0, np.size(cost)), cost, yerr=fluctuations, fmt='o',
-                 ecolor='black', elinewidth=1, markerfacecolor='red', markeredgecolor='black')
-    ax0.set_title('Progress of levelling')
-    ax0.set_xlabel('Step number')
-    ax0.set_ylabel('Cost')
-
-    # Create a grid of x and y values
-    xi = np.linspace(min(x_motor), max(x_motor), 100)
-    yi = np.linspace(min(y_motor), max(y_motor), 100)
-    xi, yi = np.meshgrid(xi, yi)
-
-    # Interpolate z values on this grid
-    cost_i = griddata((x_motor, y_motor), cost, (xi, yi), method='cubic')
-
-    # Create a contour plot
-    # change cmap to any colormap you like
-    contour = ax1.contourf(xi, yi, cost_i, cmap='jet')
-    fig.colorbar(contour, ax=ax1, orientation='vertical')
-
-    # Plot the original data points on top of the contour plot
-    ax1.scatter(x_motor, y_motor, color='ko', s=5)
-
-    ax1.set_title('Levelling progress plot')
-    ax1.set_xlabel('X_motor')
-    ax1.set_ylabel('Y_motor')
-
-    fig2, ax_img = plt.subplots()
-
-    img = imread(folder + img_filename)
-    ax_img.imshow(img)
-
-    # display(fig)
-    # clear_output(wait=True)
-    plt.show()
