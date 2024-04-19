@@ -96,8 +96,9 @@ class Shaker:
             stop_at_end (bool, optional): Whether to stop shaker when ramp is complete. The recording will stop regardless. Defaults to False.
         """
         if start > stop:
-            step_size = -step_size
-        duty_cycles = np.arange(start, stop + 1, step_size)
+            duty_cycles = np.arange(start, stop - 1, -step_size)
+        else:
+            duty_cycles = np.arange(start, stop + 1, step_size)
         self.sequence(duty_cycles, rate, record=record,
                       stop_at_end=stop_at_end)
 
