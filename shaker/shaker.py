@@ -1,10 +1,9 @@
-import sys
-sys.path.insert(0,'..')
-import time
-import numpy as np
-
-from labequipment.arduino import Arduino
 from .settings import SHAKER_ARDUINO
+from labequipment.arduino import Arduino
+import numpy as np
+import time
+import sys
+sys.path.insert(0, '..')
 
 
 class Shaker:
@@ -14,7 +13,7 @@ class Shaker:
     1) Open communication
     2) Set a particular drive amplitude
     3) Set a ramp of drive amplitudes.
-    
+
     The acceleration is characterised using the duty_cycle which is related to the 
     fraction of the 50hz cyle for which the magnet is being powered.
 
@@ -24,9 +23,10 @@ class Shaker:
     user to extract the acceleration at a later date.
 
     """
+
     def __init__(self):
         print("shaker init")
-        self.power = Arduino(SHAKER_ARDUINO) 
+        self.power = Arduino(SHAKER_ARDUINO)
         self.switch_serial_mode()
 
     def switch_serial_mode(self):
@@ -34,20 +34,20 @@ class Shaker:
         message = ''
         while not message:
             message = self._toggle()
-        
+
         if 'Serial' not in message:
             time.sleep(0.25)
-            message=self._toggle()
+            message = self._toggle()
 
     def switch_manual_mode(self):
         message = ''
         while not message:
             message = self._toggle()
-        
+
         if 'Manual' not in message:
             time.sleep(0.1)
-            message=self._toggle()
-        
+            message = self._toggle()
+
     def _toggle(self):
         self.power.flush()
         time.sleep(0.2)
@@ -55,19 +55,19 @@ class Shaker:
         time.sleep(0.2)
         lines = self.power.readlines(2)
         message = lines[1]
-        return message        
+        return message
 
-    def set_duty(self, val : int):
+    def set_duty(self, val: int):
         """Set a new value of the duty cycle
-        
+
         val is a 3 digit number indicating new duty cycle
         """
         string = 'd{:03}'.format(val)
         self.power.send_serial_line(string)
-        
+
         self._clear_buffer()
 
-    def set_duty_and_record(self, val : int):
+    def set_duty_and_record(self, val: int):
         """Sets new duty cycle but also sends a TTL signal to camera output 
             to trigger camera. This starts or stops the camera recording as appropriate.
 
@@ -75,18 +75,16 @@ class Shaker:
         """
         string = 'i{:03}'.format(val)
         self.power.send_serial_line(string)
-        
+
         self._clear_buffer()
 
-
     def ramp(self,
-                start : int,
-                stop : int,
-                rate : float,
-                step_size : int=1,
-                record : bool=False,
-                stop_at_end : bool=False):
-
+             start: int,
+             stop: int,
+             rate: float,
+             step_size: int = 1,
+             record: bool = False,
+             stop_at_end: bool = False):
         """Ramp the acceleration between two values at a constant rate
 
         Args:
@@ -96,16 +94,18 @@ class Shaker:
             step_size (int, optional): Modify the duty_cycle in steps of .... Defaults to 1.
             record (bool, optional): Records entire sequence. Defaults to False.
             stop_at_end (bool, optional): Whether to stop shaker when ramp is complete. The recording will stop regardless. Defaults to False.
-        """  
-        duty_cycles = np.arange(start, stop + 1, step_size)        
-        self.sequence(duty_cycles, rate, record=record, stop_at_end=stop_at_end)
-    
-    def sequence(self, 
-                    values : list[int], 
-                    rate : float, 
-                    record : bool=False, 
-                    stop_at_end : bool=False):
+        """
+        if start > stop:
+            step_size = -step_size
+        duty_cycles = np.arange(start, stop + 1, step_size)
+        self.sequence(duty_cycles, rate, record=record,
+                      stop_at_end=stop_at_end)
 
+    def sequence(self,
+                 values: list[int],
+                 rate: float,
+                 record: bool = False,
+                 stop_at_end: bool = False):
         """Apply duty_cycle values sequentially from list of values
 
         Args:
@@ -114,7 +114,8 @@ class Shaker:
             record (bool, optional): Records entire sequence. Defaults to False.
             stop_at_end (bool, optional): Whether to stop shaker when ramp is complete. The recording will stop regardless. Defaults to False.
         """
-        self.set_duty_and_record(values[0]) if record else self.set_duty(values[0])
+        self.set_duty_and_record(
+            values[0]) if record else self.set_duty(values[0])
         delay = 1/rate
         time.sleep(delay)
 
@@ -131,7 +132,8 @@ class Shaker:
         if stop_at_end:
             self.set_duty_and_record(0) if record else self.set_duty(0)
         else:
-            self.set_duty_and_record(values[-1]) if record else self.set_duty(values[-1])
+            self.set_duty_and_record(
+                values[-1]) if record else self.set_duty(values[-1])
 
     def _clear_buffer(self):
         self.power.read_all()
@@ -140,29 +142,26 @@ class Shaker:
         time.sleep(1)
         self.switch_manual_mode()
         self.power.quit_serial()
-        
+
         print('Shaker communication closed')
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, *args):
         self.quit()
 
 
-
 if __name__ == "__main__":
     with Shaker() as myshaker:
-        #myshaker.sequence([100,400,500,400], rate=0.1)
+        # myshaker.sequence([100,400,500,400], rate=0.1)
         myshaker.set_duty(500)
         myshaker.set_duty(400)
-        #time.sleep(5)
-        #myshaker.ramp(100, 550, 10, record=True)
-        #time.sleep(2)
-        #myshaker.set_duty_and_record(450)
+        # time.sleep(5)
+        # myshaker.ramp(100, 550, 10, record=True)
+        # time.sleep(2)
+        # myshaker.set_duty_and_record(450)
         time.sleep(5)
-        
-
 
     """
     

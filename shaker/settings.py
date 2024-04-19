@@ -31,11 +31,11 @@ SETTINGS_com_bubble = {
         'blur_kernel': 9
     },
     'shaker_settings':  {
-        'initial_duty': 680,
-        'measure_duty': 550,
-        'wait_time': 15,
-        'measure_time': 10,
-        'ramp_time': 95
+        'initial_duty': 685,
+        'measure_duty': 560,
+        'wait_time': 0,
+        'measure_time': 0,
+        'ramp_time': 90
     }
 }
 
