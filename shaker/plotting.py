@@ -61,20 +61,31 @@ def plot_levelling(folder, tracking_filename, img_filename):
     ax0.set_ylabel('Cost')
 
     # Create a grid of x and y values
-    xi = np.linspace(min(x_motor), max(x_motor), 100)
-    yi = np.linspace(min(y_motor), max(y_motor), 100)
+    xi = np.linspace(min(x_motor), max(x_motor), 10000)
+    yi = np.linspace(min(y_motor), max(y_motor), 10000)
     xi, yi = np.meshgrid(xi, yi)
-
     # Interpolate z values on this grid
     cost_i = griddata((x_motor, y_motor), cost, (xi, yi), method='cubic')
+    
+    # Find the indices of the minimum value in the interpolated grid
+    min_indices = np.unravel_index(np.argmin(cost_i), cost_i.shape)
+
+    # Use these indices to find the corresponding values in xi and yi
+    xi_min = xi[min_indices]
+    yi_min = yi[min_indices]
+
+    print(f"The motor values that would give the minimum value of the cost are {xi_min} and {yi_min}, respectively.")
 
     # Create a contour plot
     # change cmap to any colormap you like
-    contour = ax1.contourf(xi, yi, cost_i, cmap='jet')
+    contour = ax1.contourf(xi, yi, cost_i, cmap='viridis')
     fig.colorbar(contour, ax=ax1, orientation='vertical')
 
+
+
     # Plot the original data points on top of the contour plot
-    ax1.scatter(x_motor, y_motor, color='ko', s=5)
+    ax1.scatter(x_motor, y_motor, color='r', edgecolor='k', marker='o',s=5)
+    ax1.scatter(xi_min, yi_min, color='b',edgecolor='k', marker='o', s=10)
 
     ax1.set_title('Levelling progress plot')
     ax1.set_xlabel('X_motor')

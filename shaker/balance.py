@@ -3,7 +3,6 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
-from tqdm import tqdm
 from IPython.display import display, clear_output
 
 from .settings import SETTINGS_PATH, TRACK_LEVEL, update_settings_file,SETTINGS_com_balls, SETTINGS_com_bubble
@@ -173,18 +172,14 @@ class Balancer:
 
         """
         # Number of measurements to average to get an estimate of centre of mass of particles
-        progress_bar = tqdm(total=ncalls)
-
         self.iterations = iterations
 
         def min_fn(new_xy_coords):
-            progress_bar.update(1)
-
             "Adjust the motor positions to match input"
             self.motors.movexy(new_xy_coords[0], new_xy_coords[1])
 
             # Evaluate new x,y coordinates
-            x, y, fluctuations = self._measure(caller='min_fn')
+            x, y, _ = self._measure(caller='min_fn')
 
             # Work out how far away com is from centre
             cost = ((self.cx - x)**2+(self.cy - y)**2)**0.5
@@ -192,11 +187,8 @@ class Balancer:
             return cost
 
         # The bit that minimises the cost function
-        result_gp = gp_minimize(min_fn, self.motor_limits, n_initial_points=5,
+        result_gp = gp_minimize(min_fn, self.motor_limits, n_initial_points=6,
                                 n_calls=ncalls, acq_optimizer="sampling", verbose=False)
-        
-        progress_bar.close()
-
         self._prep_expt(result_gp)
         
         return result_gp
@@ -269,7 +261,7 @@ class Balancer:
         return img
 
     def _update_plot(self):
-        update_plot(fig, ax, track_levelling)
+        update_plot(self.fig, self.ax, self.track_levelling)
         
 
     def _save_data(self):

@@ -6,8 +6,6 @@ from labvision.images.cropmask import viewer
 from labvision.images import threshold, median_blur, apply_mask, mask_polygon, bgr_to_gray
 from labvision.camera.camera_config import CameraType
 
-from .balance import update_settings_file
-from .settings import SETTINGS_PATH, TRACK_LEVEL, update_settings_file
 
 panasonic = CameraType.PANASONICHCX1000  # creating camera object.
 
@@ -56,12 +54,16 @@ def com_balls(img, pts, img_settings=None, debug=False):
     return x0, y0
 
 
-def com_bubble(img, pts, debug=False):
-    """Needs implementing"""
-    raise NotImplementedError("com_bubble not yet implemented")
-    x0 = 1
-    y0 = 1
+def com_bubble(img, pts, img_settings=None, debug=False):
+    bw_img = bgr_to_gray(img)
+    img_threshold = threshold(median_blur(
+        bw_img, kernel=(img_settings['blur_kernel'])), value=img_settings['threshold'], invert=img_settings['invert'], configure=debug)
+    img_masked = apply_mask(
+        img_threshold, mask_polygon(np.shape(img_threshold), pts))
+    x0, y0 = find_com(img_masked)
+    time.sleep(0.5)
     return x0, y0
+
 
 # --------------------------------------------------------------------
 """Function to control a measurement of the centre of mass of the system"""
@@ -95,7 +97,12 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
     # reset everything by raising duty cycle and then ramping down to lower value
     shaker.set_duty(shaker_settings['initial_duty'])
     time.sleep(shaker_settings['wait_time'])
-    shaker.set_duty(shaker_settings['measure_duty'])
+
+    if shaker_settings['ramp_time'] > 0:
+        shaker.ramp(shaker_settings['initial_duty'],
+                    shaker_settings['measure_duty'], 1/shaker_settings['ramp_time'])
+    else:
+        shaker.set_duty(shaker_settings['measure_duty'])
     time.sleep(shaker_settings['measure_time'])
 
     # take image and analyse to find centre of mass of system
@@ -104,6 +111,3 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
         img, pts, img_settings=img_processing, debug=debug)
 
     return x0, y0
-
-
-
