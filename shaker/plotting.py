@@ -1,7 +1,10 @@
+import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
 from matplotlib import gridspec
 from matplotlib.image import imread
+import cv2
+from IPython.display import display, clear_output
 
 
 def draw_img_axes(img):
@@ -39,7 +42,7 @@ def plot_levelling(folder, tracking_filename, img_filename):
     gs = gridspec.GridSpec(2, 1, height_ratios=[1, 2])
     fig = plt.figure(figsize=(8, 8))
     ax0 = plt.subplot(gs[0])
-    ax1 = fig.add_subplot(gs[1], projection='3d')
+    ax1 = fig.add_subplot(gs[1])#, projection='3d')
 
     # Convert the first three columns of track_levelling to a numpy array
     data = np.array(track_levelling)

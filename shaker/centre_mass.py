@@ -7,7 +7,7 @@ from labvision.images import threshold, median_blur, apply_mask, mask_polygon, b
 from labvision.camera.camera_config import CameraType
 
 from .balance import update_settings_file
-from .settings import SETTINGS_PATH, TRACK_LEVEL
+from .settings import SETTINGS_PATH, TRACK_LEVEL, update_settings_file
 
 panasonic = CameraType.PANASONICHCX1000  # creating camera object.
 
@@ -56,22 +56,6 @@ def com_balls(img, pts, img_settings=None, debug=False):
     return x0, y0
 
 
-SETTINGS_com_balls = {
-    'img_processing':   {
-        'img_fn': com_balls,
-        'threshold': 87,
-        'invert': True,
-        'blur_kernel': 3
-    },
-    'shaker_settings':  {
-        'initial_duty': 650,
-        'measure_duty': 560,
-        'wait_time': 5,
-        'measure_time': 10
-    }
-}
-
-
 def com_bubble(img, pts, debug=False):
     """Needs implementing"""
     raise NotImplementedError("com_bubble not yet implemented")
@@ -79,21 +63,6 @@ def com_bubble(img, pts, debug=False):
     y0 = 1
     return x0, y0
 
-
-SETTINGS_com_bubble = {
-    'img_processing':   {
-        'img_fn': com_bubble,
-        'threshold': 87,
-        'invert': True,
-        'blur_kernel': 3
-    },
-    'shaker_settings':  {
-        'initial_duty': 650,
-        'measure_duty': 560,
-        'wait_time': 5,
-        'measure_time': 10
-    }
-}
 # --------------------------------------------------------------------
 """Function to control a measurement of the centre of mass of the system"""
 
@@ -136,26 +105,5 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
 
     return x0, y0
 
-
-def refine_motor_limits(levelling_file=SETTINGS_PATH + TRACK_LEVEL):
-    """This function takes the levelling data and refines the motor limits to be used in the levelling process. It does this by taking the minimum and maximum values of the motor positions in the levelling data and adds a buffer of 10% of the range to the limits. This is to ensure that the motors do not go to the absolute limit of their range. The new limits are saved in the settings file.
-    """
-    levelling_data = np.loadtxt(levelling_file, delimiter=',')
-    x_motor = levelling_data[:, 0]
-    y_motor = levelling_data[:, 1]
-    cost = levelling_data[:, 2]
-    fluctuations = levelling_data[:, 3]
-
-    mean_fluctuation = np.mean(fluctuations)
-
-    xmin = x_motor[-1] - (4*mean_fluctuation)
-    xmax = x_motor[-1] + (4*mean_fluctuation)
-    ymin = y_motor[-1] - (4*mean_fluctuation)
-    ymax = y_motor[-1] + (4*mean_fluctuation)
-
-    motor_limits = [[xmin, xmax], [ymin, ymax]]
-    update_settings_file(motor_limits=motor_limits)
-
-    return motor_limits
 
 

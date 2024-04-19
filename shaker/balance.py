@@ -3,14 +3,12 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
-import json
-import cv2
 from tqdm import tqdm
 from IPython.display import display, clear_output
 
-from .settings import SETTINGS_PATH, SETTINGS_FILE, TRACK_LEVEL
+from .settings import SETTINGS_PATH, TRACK_LEVEL, update_settings_file,SETTINGS_com_balls, SETTINGS_com_bubble
 from .plotting import update_plot, draw_img_axes
-from .centre_mass import find_boundary, SETTINGS_com_balls, SETTINGS_com_bubble, measure_com
+from .centre_mass import find_boundary,  measure_com
 
 
 # from scipy.optimize import minimize
@@ -312,29 +310,4 @@ def user_coord_request(position):
                 formatted = False
 
 
-def update_settings_file(motor_pos=None, motor_limits=None, motor_pts=None, boundary_pts=None):
-    try:
-        with open(SETTINGS_PATH + SETTINGS_FILE) as f:
-            settings = json.loads(f.read())
-    except:
-        settings = {'motor_pos': "0, 0",
-                    'motor_limits': [(0, 0), (0, 0)],
-                    'motor_pts': [(0, 0), (0, 0)],
-                    'boundary_pts': (((227, 5), (429, 7), (522, 181), (422, 349), (225, 347), (126, 174)), 325.1666666666667, 177.16666666666666),
-                    'shaker_warmup_duty': 550,
-                    'shaker_warmup_time': 2
-                    }
 
-    if motor_pos:
-        settings['motor_pos'] = motor_pos
-    if motor_limits:
-        settings['motor_limits'] = motor_limits
-    if motor_pts:
-        settings['motor_pts'] = motor_pts
-    if boundary_pts:
-        settings['boundary_pts'] = boundary_pts
-
-    with open(SETTINGS_PATH + SETTINGS_FILE, 'w') as f:
-        f.write(json.dumps(settings))
-
-    return settings
