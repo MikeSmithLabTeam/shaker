@@ -78,7 +78,7 @@ def plot_levelling(folder, tracking_filename, img_filename):
 
     # Create a contour plot
     # change cmap to any colormap you like
-    contour = ax1.contourf(xi, yi, cost_i, cmap='viridis')
+    contour = ax1.contourf(xi, yi, cost_i, cmap='viridis', levels=100)
     fig.colorbar(contour, ax=ax1, orientation='vertical')
 
 
