@@ -61,8 +61,8 @@ def plot_levelling(folder, tracking_filename, img_filename):
     ax0.set_ylabel('Cost')
 
     # Create a grid of x and y values
-    xi = np.linspace(min(x_motor), max(x_motor), 10000)
-    yi = np.linspace(min(y_motor), max(y_motor), 10000)
+    xi = np.linspace(min(x_motor), max(x_motor), 1000)
+    yi = np.linspace(min(y_motor), max(y_motor), 1000)
     xi, yi = np.meshgrid(xi, yi)
     # Interpolate z values on this grid
     cost_i = griddata((x_motor, y_motor), cost, (xi, yi), method='cubic')

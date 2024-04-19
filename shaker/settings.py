@@ -26,16 +26,16 @@ TRACK_LEVEL = "shaker1_level.txt"
 SETTINGS_com_bubble = {
     'img_processing':   {
         'img_fn': com_bubble,
-        'threshold': 50,
+        'threshold': 79,
         'invert': False,
-        'blur_kernel': 25
+        'blur_kernel': 9
     },
     'shaker_settings':  {
-        'initial_duty': 650,
-        'measure_duty': 560,
-        'wait_time': 5,
+        'initial_duty': 680,
+        'measure_duty': 550,
+        'wait_time': 15,
         'measure_time': 10,
-        'ramp_time': 0
+        'ramp_time': 95
     }
 }
 
