@@ -1,3 +1,4 @@
+
 from .settings import SHAKER_ARDUINO
 from labequipment.arduino import Arduino
 import numpy as np
@@ -90,7 +91,7 @@ class Shaker:
         Args:
             start (int): duty_cycle integer 
             stop (int): duty_cycle integer 
-            rate (float): rate in duty_cycles per second
+            rate (float): rate in duty_cycles per second. N.B this is different from rate in sequence which is number of values per second. If step_size=1 these are the same.
             step_size (int, optional): Modify the duty_cycle in steps of .... Defaults to 1.
             record (bool, optional): Records entire sequence. Defaults to False.
             stop_at_end (bool, optional): Whether to stop shaker when ramp is complete. The recording will stop regardless. Defaults to False.
@@ -99,7 +100,7 @@ class Shaker:
             duty_cycles = np.arange(start, stop - 1, -step_size)
         else:
             duty_cycles = np.arange(start, stop + 1, step_size)
-        self.sequence(duty_cycles, rate, record=record,
+        self.sequence(duty_cycles, rate*step_size, record=record,
                       stop_at_end=stop_at_end)
 
     def sequence(self,
@@ -151,6 +152,7 @@ class Shaker:
 
     def __exit__(self, *args):
         self.quit()
+
 
 
 if __name__ == "__main__":

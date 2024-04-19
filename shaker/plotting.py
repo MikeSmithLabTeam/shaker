@@ -68,11 +68,11 @@ def plot_levelling(folder, tracking_filename, img_filename):
     cost_i = griddata((x_motor, y_motor), cost, (xi, yi), method='cubic')
     
     # Find the indices of the minimum value in the interpolated grid
-    min_indices = np.unravel_index(np.argmin(cost_i), cost_i.shape)
+    min_index = np.nanargmin(cost_i.flatten())
 
     # Use these indices to find the corresponding values in xi and yi
-    xi_min = xi[min_indices]
-    yi_min = yi[min_indices]
+    xi_min = xi.flatten()[min_index]
+    yi_min = yi.flatten()[min_index]
 
     print(f"The motor values that would give the minimum value of the cost are {xi_min} and {yi_min}, respectively.")
 
