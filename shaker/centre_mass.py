@@ -100,7 +100,7 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
 
     if shaker_settings['ramp_time'] > 0:
         shaker.ramp(shaker_settings['initial_duty'],
-                    shaker_settings['measure_duty'], 1/shaker_settings['ramp_time'])
+                    shaker_settings['measure_duty'], np.abs(shaker_settings['initial_duty']-shaker_settings['measure_duty']/shaker_settings['ramp_time']))
     else:
         shaker.set_duty(shaker_settings['measure_duty'])
     time.sleep(shaker_settings['measure_time'])
