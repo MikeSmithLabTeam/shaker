@@ -140,6 +140,7 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
 
     return x0, y0
 
+
 def refine_motor_limits(levelling_file=SETTINGS_PATH + TRACK_LEVEL):
     """This function takes the levelling data and refines the motor limits to be used in the levelling process. It does this by taking the minimum and maximum values of the motor positions in the levelling data and adds a buffer of 10% of the range to the limits. This is to ensure that the motors do not go to the absolute limit of their range. The new limits are saved in the settings file.
     """
@@ -155,7 +156,7 @@ def refine_motor_limits(levelling_file=SETTINGS_PATH + TRACK_LEVEL):
     xmax = x_motor[-1] + (4*mean_fluctuation)
     ymin = y_motor[-1] - (4*mean_fluctuation)
     ymax = y_motor[-1] + (4*mean_fluctuation)
-    
+
     motor_limits = [[xmin, xmax], [ymin, ymax]]
     update_settings_file(motor_limits=motor_limits)
 
@@ -170,9 +171,9 @@ def plot_levelling(folder, tracking_filename, img_filename):
 
     # Create the figure and 2D subplots
     gs = gridspec.GridSpec(2, 1, height_ratios=[1, 2])
-    fig= plt.figure(figsize=(8, 8))
+    fig = plt.figure(figsize=(8, 8))
     ax0 = plt.subplot(gs[0])
-    ax1 = fig.add_subplot(gs[1], projection='3d')   
+    ax1 = fig.add_subplot(gs[1], projection='3d')
 
     # Convert the first three columns of track_levelling to a numpy array
     data = np.array(track_levelling)
@@ -185,12 +186,10 @@ def plot_levelling(folder, tracking_filename, img_filename):
 
     # Create a scatter plot in the upper subplot
     ax0.errorbar(np.arange(0, np.size(cost)), cost, yerr=fluctuations, fmt='o',
-                      ecolor='black', elinewidth=1, markerfacecolor='red', markeredgecolor='black')
+                 ecolor='black', elinewidth=1, markerfacecolor='red', markeredgecolor='black')
     ax0.set_title('Progress of levelling')
     ax0.set_xlabel('Step number')
     ax0.set_ylabel('Cost')
-
-    
 
     # Create a grid of x and y values
     xi = np.linspace(min(x_motor), max(x_motor), 100)
@@ -200,17 +199,17 @@ def plot_levelling(folder, tracking_filename, img_filename):
     # Interpolate z values on this grid
     cost_i = griddata((x_motor, y_motor), cost, (xi, yi), method='cubic')
 
+    # Create a contour plot
+    # change cmap to any colormap you like
+    contour = ax1.contourf(xi, yi, cost_i, cmap='jet')
+    fig.colorbar(contour, ax=ax1, orientation='vertical')
 
-    # Create a surface plot
-    ax1.plot_surface(xi, yi, cost_i)
-
-    # Plot the original data points on top of the surface plot
-    ax1.scatter(x_motor, y_motor, cost, color='r')
+    # Plot the original data points on top of the contour plot
+    ax1.scatter(x_motor, y_motor, color='ko', s=5)
 
     ax1.set_title('Levelling progress plot')
     ax1.set_xlabel('X_motor')
     ax1.set_ylabel('Y_motor')
-    ax1.set_zlabel('Cost')
 
     fig2, ax_img = plt.subplots()
 
