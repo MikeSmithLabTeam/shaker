@@ -39,15 +39,6 @@ class Shaker:
         self.power.send_serial_line('m')
         time.sleep(0.2)
 
-    def _toggle(self, command: str):
-        self.power.flush()
-        time.sleep(0.2)
-        self.power.send_serial_line(command)
-        time.sleep(0.2)
-        lines = self.power.readlines(2)
-        message = lines[1]
-        return message
-
     def set_duty(self, val: int):
         """Set a new value of the duty cycle
 
