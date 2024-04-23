@@ -56,7 +56,7 @@ class Balancer:
         except:
             print("No previous levelling data found")
 
-        self.track_levelling = [[0, 0, 0, 0]]
+        self.track_levelling = [[0, 0, 0, 0, 0, 0]]
         self.expt_com = []
 
         self.shaker.set_duty(update_settings_file()['shaker_warmup_duty'])
