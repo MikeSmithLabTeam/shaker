@@ -29,8 +29,8 @@ boolean voltZero = false;                                           // Flag to s
 boolean dataCorrupt = false;                                        // Set data corrupt flag to 0
 boolean phaseComplete = false;                                      // phaseComplete flags when Output Compare 1 triggers
 const byte TONE_ADDRESS = 42;                                       // Set address of tone generating Arduino
-volatile long serialDuty = 0;                                       // Variable for storing the serial duty cycle as a percentage
-volatile long workingDuty = 0;                                      // Variable to store duty cycle variable for use in registers
+volatile long serialDuty = 500;                                       // Variable for storing the serial duty cycle as a percentage
+volatile long workingDuty = 500;                                      // Variable to store duty cycle variable for use in registers
 
 /* Serial Processing (Execute Stored Commands) */
 void process_data (const char *data) {
@@ -250,7 +250,7 @@ void setup() {
 void loop() {
   
   static boolean adcStarted  = false;                                             // "adcStarted" = 1 flags the ADC as busy
-  static unsigned long manualDuty = 0;                                            // Initialize manual duty cycle variable
+  static unsigned long manualDuty = 500;                                            // Initialize manual duty cycle variable
 
   if (adcDone) {                                                                  // Check if the ADC is done
     adcStarted = false;                                                             // Flag the ADC as finished
@@ -277,10 +277,6 @@ void loop() {
         lcd.print("  ");                                                                //
         break;
       case false:      
-        Serial.println("ADC: ");     
-        Serial.println(ADC);
-        Serial.println("Timer diff :");                                                  // MANUAL;;
-        Serial.println(OCR1A - OCR1B);
         manualDuty = (1024L - ADC) * 1000L / 1024L;                                     // Update duty cycle value (100 defined as long type)
         lcd.print(manualDuty);                                                          // Print current duty cycle on LCD
         lcd.print("  ");

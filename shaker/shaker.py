@@ -28,17 +28,21 @@ class Shaker:
     def __init__(self):
         print("shaker init")
         self.power = Arduino(SHAKER_ARDUINO)
+        time.sleep(1)
+        self.power.read_all()
         self.switch_serial_mode()
 
     def switch_serial_mode(self):
         """Put shaker in serial mode"""
         self.power.send_serial_line('s')
-        time.sleep(0.2)
+        _=self.power.read_serial_line()
+        print(self.power.read_serial_line()[:-2])
 
     def switch_manual_mode(self):
         self.power.send_serial_line('m')
-        time.sleep(0.2)
-
+        _=self.power.read_serial_line()
+        print(self.power.read_serial_line()[:-2])
+        
     def set_duty(self, val: int):
         """Set a new value of the duty cycle
 
