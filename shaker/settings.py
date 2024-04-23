@@ -51,7 +51,7 @@ SETTINGS_com_balls = {
         'measure_duty': 560,
         'wait_time': 5,
         'measure_time': 10,
-        'ramp_time': 0
+        'ramp_time': 10
     }
 }
 

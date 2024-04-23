@@ -32,27 +32,17 @@ class Shaker:
 
     def switch_serial_mode(self):
         """Put shaker in serial mode"""
-        message = ''
-        while not message:
-            message = self._toggle()
-
-        if 'Serial' not in message:
-            time.sleep(0.25)
-            message = self._toggle()
+        self.power.send_serial_line('s')
+        time.sleep(0.2)
 
     def switch_manual_mode(self):
-        message = ''
-        while not message:
-            message = self._toggle()
+        self.power.send_serial_line('m')
+        time.sleep(0.2)
 
-        if 'Manual' not in message:
-            time.sleep(0.1)
-            message = self._toggle()
-
-    def _toggle(self):
+    def _toggle(self, command: str):
         self.power.flush()
         time.sleep(0.2)
-        self.power.send_serial_line('x')
+        self.power.send_serial_line(command)
         time.sleep(0.2)
         lines = self.power.readlines(2)
         message = lines[1]
@@ -152,7 +142,6 @@ class Shaker:
 
     def __exit__(self, *args):
         self.quit()
-
 
 
 if __name__ == "__main__":
