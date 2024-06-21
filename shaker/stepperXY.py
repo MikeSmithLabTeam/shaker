@@ -96,7 +96,7 @@ class StepperXY(stepper.Stepper):
             update_settings_file(motor_pos=new_motor_pos)
 
         else:
-            raise StepperMotorException("Stepper motors failed to move")
+            raise StepperMotorException(success1, success2)
 
     def __enter__(self):
         return self
@@ -107,6 +107,12 @@ class StepperXY(stepper.Stepper):
 
 
 class StepperMotorException(Exception):
-    def __init__(self, message) -> None:
+    def __init__(self, success1, success2) -> None:
+        
+        if not success1:
+            message = "Motor 1 failed to move"
+        elif not success2:
+            message = "Motor 2 failed to move"
+        else:
+            "Stepper motor move error"
         super().__init__(message)
-        print(message)
