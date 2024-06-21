@@ -8,7 +8,7 @@ with open("LICENSE", "r") as fh:
 
 setuptools.setup(
     name='shaker',
-    version='0.1',
+    version='1.0.0',
     license=license,
     packages=setuptools.find_packages(
         exclude=('tests', 'docs')

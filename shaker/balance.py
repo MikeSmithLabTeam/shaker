@@ -56,7 +56,7 @@ class Balancer:
         except:
             print("No previous levelling data found")
 
-        self.track_levelling = [[0, 0, 0, 0]]
+        self.track_levelling = [[0, 0, 0, 0, 0, 0]]
         self.expt_com = []
 
         self.shaker.set_duty(update_settings_file()['shaker_warmup_duty'])
@@ -252,7 +252,7 @@ class Balancer:
         for point in self.track_levelling[:-1]:
             colour = (255, 0, 0)
             img = draw_circle(
-                img, point[0], point[1], rad=4, color=colour, thickness=-1)
+                img, point[2], point[3], rad=4, color=colour, thickness=-1)
 
         self.disp.close_window()
         self.disp.window_name = 'Levelling : (X_motor, Y_motor), (x_com, y_com), (cx, cy) : (' + str(self.motors.x) + ',' + str(
