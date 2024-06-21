@@ -6,6 +6,7 @@ from labvision.images.cropmask import viewer
 from labvision.images import threshold, median_blur, apply_mask, mask_polygon, bgr_to_gray
 from labvision.camera.camera_config import CameraType
 
+from .settings import update_settings_file, SETTINGS_com_balls
 
 panasonic = CameraType.PANASONICHCX1000  # creating camera object.
 
@@ -111,3 +112,32 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
         img, pts, img_settings=img_processing, debug=debug)
 
     return x0, y0
+
+
+def get_measurement(shaker, cam, boundary_pts, iterations=10):
+    """This is similar to the above but is used as a simple function
+    that can be called to work out the centre of mass from repeated measurements."""
+    x_vals = []
+    y_vals = []
+    for _ in range(iterations):
+        x,y = measure_com(cam, shaker, boundary_pts, settings=SETTINGS_com_balls)
+        x_vals.append(x)
+        y_vals.append(y)
+    mean_x = sum(x_vals)/len(x_vals)
+    mean_y = sum(y_vals)/len(y_vals)
+    x_vals = np.array(x_vals)
+    y_vals = np.array(y_vals)
+
+    cx = update_settings_file()['boundary_pts'][1]
+    cy = update_settings_file()['boundary_pts'][2]
+
+    mean_r = np.sum(((x_vals-cx)**2 + (y_vals-cy)**2)**0.5)/len(x_vals)
+    
+    std_x = sum([(x - mean_x)**2 for x in x_vals])**0.5
+    std_y = sum([(y - mean_y)**2 for y in y_vals])**0.5
+    
+    std_r = (std_x**2 + std_y**2)**0.5/(np.sqrt(iterations))
+    std_x = std_x/(np.sqrt(iterations))
+    std_y = std_y/(np.sqrt(iterations))
+
+    return mean_x, mean_y, mean_r, std_x, std_y, std_r
