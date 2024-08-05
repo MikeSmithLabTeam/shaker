@@ -6,7 +6,7 @@ from labvision.images.cropmask import viewer
 from labvision.images import threshold, median_blur, apply_mask, mask_polygon, bgr_to_gray
 from labvision.camera.camera_config import CameraType
 
-from .settings import update_settings_file, SETTINGS_com_balls
+
 
 panasonic = CameraType.PANASONICHCX1000  # creating camera object.
 
@@ -117,6 +117,9 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
 def get_measurement(shaker, cam, boundary_pts, settings=None, iterations=10):
     """This is similar to the above but is used as a simple function
     that can be called to work out the centre of mass from repeated measurements."""
+    #Imported here to avoid circular import
+    from .settings import update_settings_file, SETTINGS_com_balls
+    
     x_vals = []
     y_vals = []
     for _ in range(iterations):
