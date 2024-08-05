@@ -114,13 +114,13 @@ def measure_com(cam, shaker, pts, settings=None, debug=False):
     return x0, y0
 
 
-def get_measurement(shaker, cam, boundary_pts, iterations=10):
+def get_measurement(shaker, cam, boundary_pts, settings=None, iterations=10):
     """This is similar to the above but is used as a simple function
     that can be called to work out the centre of mass from repeated measurements."""
     x_vals = []
     y_vals = []
     for _ in range(iterations):
-        x,y = measure_com(cam, shaker, boundary_pts, settings=SETTINGS_com_balls)
+        x,y = measure_com(cam, shaker, boundary_pts, settings=settings)
         x_vals.append(x)
         y_vals.append(y)
     mean_x = sum(x_vals)/len(x_vals)
