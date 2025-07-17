@@ -3,25 +3,25 @@ import json
 from .centre_mass import com_bubble, com_balls
 
 # --------------------------------------------------------------------
-SHAKER_ARDUINO = {"PORT": "COM5",
+SHAKER_ARDUINO = {"PORT": "COM5_SETPORTNUM",
                   "BAUDRATE": 115200
                   }
 
-STEPPER_ARDUINO = {"PORT": "COM4",
+STEPPER_ARDUINO = {"PORT": "COM4_SETPORTNUM",
                    "BAUDRATE": 115200
                    }
 
-ACCELEROMETER_SHAKER = {"PORT": "COM3",
+ACCELEROMETER_SHAKER = {"PORT": "COM3_SETPORTNUM",
                         "BAUDRATE": 9600
                         }
 
-SETTINGS_PATH = "Z:/shaker_config/"
+SETTINGS_PATH = "Z:/shaker_config/_SETPATHCORRECTLY"
 
-SETTINGS_FILE = "shaker1_params.txt"
+SETTINGS_FILE = "shaker1_params.txt_SETFILENAME"
 
-ACCELEROMETER_FILE = "shaker1_accelerometer.csv"
+ACCELEROMETER_FILE = "shaker1_accelerometer.csv_SETFILENAME"
 
-TRACK_LEVEL = "shaker1_level.txt"
+TRACK_LEVEL = "shaker1_level.txtSETFILENAME"
 
 SETTINGS_com_bubble = {
     'img_processing':   {
