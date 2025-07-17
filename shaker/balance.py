@@ -2,7 +2,7 @@ import os
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from PyQt5.QtWidgets import QApplication, QInputDialog, QMessageBox
+from PyQt6.QtWidgets import QApplication, QInputDialog, QMessageBox
 from IPython.display import display, clear_output
 
 from .settings import SETTINGS_PATH, TRACK_LEVEL, update_settings_file,SETTINGS_com_balls, SETTINGS_com_bubble
