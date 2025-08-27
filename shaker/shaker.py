@@ -35,13 +35,13 @@ class Shaker:
     def switch_serial_mode(self):
         """Put shaker in serial mode"""
         self.power.send_serial_line('s')
-        _=self.power.read_serial_line()
-        print(self.power.read_serial_line()[:-2])
+        print(self.power.read_serial_line())
+        #print(self.power.read_serial_line()[:-2])# This line was used in version 3 of shaker Arduino code. Removed in v4.
 
     def switch_manual_mode(self):
         self.power.send_serial_line('m')
-        _=self.power.read_serial_line()
-        print(self.power.read_serial_line()[:-2])
+        print(self.power.read_serial_line())
+        #print(self.power.read_serial_line()[:-2])# This line was used in version 3 of shaker Arduino code. Removed in v4.
         
     def set_duty(self, val: int):
         """Set a new value of the duty cycle
