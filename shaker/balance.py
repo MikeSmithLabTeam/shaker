@@ -277,8 +277,8 @@ Helper functions
 def get_yes_no_input():
     app = QApplication([])
     reply = QMessageBox.question(None, 'Message', "Are you happy with point?",
-                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-    if reply == QMessageBox.Yes:
+                                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+    if reply == QMessageBox.StandardButton.Yes:
         return True
     else:
         return False
