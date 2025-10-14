@@ -21,19 +21,32 @@
 #define CTRL_TYPE_MANUAL 1
 #define CTRL_TYPE_SERIAL 2
 
+#define ACTIVE_SHAKER  2 // Set the shaker value. 1 has leaf springs, 2 one with conventional springs
+#define ACTIVE_CAMERA  2 // Set the camera value. 1 is Panasonic HCX1000E, 2 is Panasonic G9 --> This changes the pulse to trigger recording from a dip (1) to a spike (2)
+
+
 // Maximum number of characters that can be received from the user agent
 // including the terminating CR
 #define MAX_INPUT_LENGTH              21
 // Time in ms between calls to update the display
 #define EVENT_TIME                    200
+
 // The timer value that represents 100% duty cycle
 #define PHASE_TIME_MAX                2450
+#if ACTIVE_SHAKER == 1
+  #define PHASE_TIME_OFFSET             0
+  #define PHASE_TIME_SCALE_DIVISOR      1000
+#elif ACTIVE_SHAKER == 2
+  #define PHASE_TIME_OFFSET             200
+  #define PHASE_TIME_SCALE_DIVISOR         2000 //1000 default used shaker 1
+#endif
+
 // Value below which the PWM output will be hard coded rather than rely on the
 // interrupts. This eliminates transients at very low and very high PWM values
 #define PHASE_TIME_MIN                4
 // Default PWM value. This will be used if an 's' command is received before a
 // 'd' command
-#define SERIAL_VALUE_DEFAULT          500
+#define SERIAL_VALUE_DEFAULT          300   //500
 // Default control type (serial or manual potentiometer)
 #define CONTROL_TYPE_DEFAULT          CTRL_TYPE_MANUAL
 // Arduino pin numbers for triac, shutter and phase inputs
@@ -44,9 +57,19 @@
 // Triac drive states
 #define TRIAC_ON                      HIGH
 #define TRIAC_OFF                     LOW
-// Shutter (camera trigger) drive states
-#define SHUTTER_ACTIVE                LOW
-#define SHUTTER_INACTIVE              HIGH
+// Shutter (camera trigger) for Panasonic HCX1000E
+
+//Set the trigger for camera
+#if ACTIVE_CAMERA == 1
+  //Shutter (camera trigger) for Panasonic HCX1000E
+  #define SHUTTER_ACTIVE                LOW
+  #define SHUTTER_INACTIVE              HIGH
+#elif ACTIVE_CAMERA == 2
+  // Shutter (camera trigger) for Panasonic G9
+  #define SHUTTER_ACTIVE                HIGH
+  #define SHUTTER_INACTIVE              LOW
+#endif
+
 // Default camera trigger pulse length. Used if an 'i' command is received
 // before a 'p' command
 #define SHUTTER_MS_DEFAULT            100
@@ -86,6 +109,7 @@ uint16_t shutterMs = SHUTTER_MS_DEFAULT;              // Duration of shutter pul
 
 
 
+
 //================================================================================
 // I M P L E M E N T A T I O N
 
@@ -104,12 +128,16 @@ void processInputString( const char* data )
 
   switch( data[ 0 ] ) {
     case 's' : 
+        serialPhaseTime = manualPhaseTime;//Trial line
+        serialValue=adcValue;
         controlType = CTRL_TYPE_SERIAL;
         Serial.println( "Serial control enabled." );                                          // Acknowledge serial control
         updateControl = true;
         break;
     case 'm' : 
         controlType = CTRL_TYPE_MANUAL;
+        manualPhaseTime=serialPhaseTime;
+        adcValue=serialValue;
         Serial.println( "Manual control enabled." );                                          // Acknowledge serial control
         updateControl = true;
         break;
@@ -153,7 +181,7 @@ void processInputString( const char* data )
         Serial.println( "Invalid value setting duty cycle" );  break;  }
       serialValue = val;
       val *= PHASE_TIME_MAX;
-      serialPhaseTime = PHASE_TIME_MAX - (uint16_t)( val / 1000 );
+      serialPhaseTime = PHASE_TIME_MAX - PHASE_TIME_OFFSET - (uint16_t)( (val)  / PHASE_TIME_SCALE_DIVISOR );
       Serial.println("Duty Cycle set to " + String( serialValue ) + "/1000" );                          // Print out Duty Cycle
       break;
     case 'p' :
@@ -363,7 +391,7 @@ void setup()
   serialValue = SERIAL_VALUE_DEFAULT;
   manualPhaseTime = 0;
   uint32_t val = (uint32_t)serialValue * PHASE_TIME_MAX;
-  serialPhaseTime = PHASE_TIME_MAX - (uint16_t)( val / 1000 );
+  serialPhaseTime = PHASE_TIME_MAX - PHASE_TIME_OFFSET - (uint16_t)( (val)  / PHASE_TIME_SCALE_DIVISOR );
 
   // Set pin modes (alternate pin functions in brackets to identify potential conflicts)
   delay( 200 );
@@ -473,7 +501,7 @@ void loop()
   // Handle new ADC result (maths that might take too long in the ISR)   
   if ( adcValid ) {
     uint32_t val = (uint32_t)adcValue * PHASE_TIME_MAX;
-    manualPhaseTime = PHASE_TIME_MAX - (uint16_t)( val / 1000 );
+    manualPhaseTime = PHASE_TIME_MAX - PHASE_TIME_OFFSET - (uint16_t)( (val)  / PHASE_TIME_SCALE_DIVISOR );
     adcValid = false;
   }
 
