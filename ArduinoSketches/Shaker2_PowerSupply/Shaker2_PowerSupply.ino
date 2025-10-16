@@ -401,7 +401,7 @@ void setup()
   pinMode( TRIAC_PIN, OUTPUT );                                                             // pin7 is the Arduino control pin for the optoisolator (PD0, RXD, PCINT16)
   pinMode( I_PHASE_PIN, INPUT );                                                              // pin8 is the interrupt pin for PCINT0 (Current Zero Cross)
   digitalWrite( TRIAC_PIN, TRIAC_OFF );                                                          // Set pin7 HIGH to turn off opto-isolator
-  digitalWrite( SHUTTER_PIN, HIGH );                                                          // Set pin6 HIGH to hold camera
+  digitalWrite( SHUTTER_PIN, SHUTTER_INACTIVE );// Set pin6 HIGH to hold camera
   
   // Set up LCD display
   lcd.begin( 20, 4 );                                                               // Intialise LCD
