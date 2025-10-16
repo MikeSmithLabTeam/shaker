@@ -10,7 +10,7 @@ Adafruit_DCMotor *motor2 = AFMS.getMotor(2); // Motor 2 connected to M2 terminal
 Adafruit_DCMotor *motor3 = AFMS.getMotor(3); // Motor 3 connected to M3 terminals
 
 // Define a default speed for all motors (0-255).
-uint8_t defaultMotorSpeed = 200; // A good moderate speed to start with
+uint8_t defaultMotorSpeed = 250; 
 //Multiplier to convert steps to ms
 float durationMultiplier = 50.0;
 const long MAX_FINAL_DURATION_MS = 600000; // 10 minutes in milliseconds
