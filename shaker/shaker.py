@@ -10,6 +10,8 @@ sys.path.insert(0, '..')
 class Shaker:
     """Shaker class handles communication between pc and Red Shaker. It can be used
     to perform simple operations:
+    
+    change
 
     1) Open communication
     2) Set a particular drive amplitude
