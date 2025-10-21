@@ -4,6 +4,8 @@ from labequipment.arduino import Arduino
 import numpy as np
 import time
 import sys
+import glob
+import os
 sys.path.insert(0, '..')
 
 
@@ -27,12 +29,22 @@ class Shaker:
 
     """
 
-    def __init__(self):
+    def __init__(self, duty_filename = None):
         print("shaker init")
         self.power = Arduino(SHAKER_ARDUINO)
         time.sleep(1)
-        self.power.read_all()
+        #self.power.read_all()
+        self.power.send_serial_line('h')
         self.switch_serial_mode()
+        self.recording = False
+        self.filecount = 0
+        
+        self.duty_filename = duty_filename
+        if duty_filename is not None:
+            #raises error if file already exists
+            self.check_dutyfilename_doesexist()
+            self.filename_update()
+       
 
     def switch_serial_mode(self):
         """Put shaker in serial mode"""
@@ -50,6 +62,7 @@ class Shaker:
 
         val is a 3 digit number indicating new duty cycle
         """
+        self.save_duty(val)
         string = 'd{:03}'.format(val)
         self.power.send_serial_line(string)
 
@@ -61,10 +74,38 @@ class Shaker:
 
             Works with Panasonic HC-X1000 and probably others
         """
+        self.save_duty(val)
+        self.recording = not self.recording
         string = 'i{:03}'.format(val)
         self.power.send_serial_line(string)
 
         self._clear_buffer()
+        if not self.recording and self.duty_filename is not None:
+            self.filecount += 1
+            self.filename_update()
+    
+    def save_duty(self,val):
+        if self.duty_filename is not None:
+            with open(self.duty_filename, 'a') as f:
+                f.write(f"{time.time()} {val}\n")
+
+    def filename_update(self):
+        counter = str(self.filecount)
+        number = (4 - len(counter)) * '0' + counter
+        if '_' in self.duty_filename:
+            base = self.duty_filename.split('_')[0]
+        else:
+            base=self.duty_filename.split('.')[0]
+        self.duty_filename = base + '_' + number + '.' + self.duty_filename.split('.')[1]
+
+    def check_dutyfilename_doesexist(self):
+        files = glob.glob(self.duty_filename.split('.')[0]+'*')
+        if files:
+            raise FileExistsError(
+                f"Duty filename {self.duty_filename} already exists. Please change the filename to avoid overwriting existing data.")
+
+                
+
 
     def ramp(self,
              start: int,

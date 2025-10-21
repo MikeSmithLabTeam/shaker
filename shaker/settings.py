@@ -3,25 +3,25 @@ import json
 from .centre_mass import com_bubble, com_balls
 
 # --------------------------------------------------------------------
-SHAKER_ARDUINO = {"PORT": "COM5_SETPORTNUM",
+SHAKER_ARDUINO = {"PORT": "COM6",
                   "BAUDRATE": 115200
                   }
 
-STEPPER_ARDUINO = {"PORT": "COM4_SETPORTNUM",
+STEPPER_ARDUINO = {"PORT": "COM4",
                    "BAUDRATE": 115200
                    }
 
-ACCELEROMETER_SHAKER = {"PORT": "COM3_SETPORTNUM",
+ACCELEROMETER_SHAKER = {"PORT": "COM5",
                         "BAUDRATE": 9600
                         }
 
-SETTINGS_PATH = "Z:/shaker_config/_SETPATHCORRECTLY"
+SETTINGS_PATH = "Z:/shaker_config/"
 
-SETTINGS_FILE = "shaker1_params.txt_SETFILENAME"
+SETTINGS_FILE = "shaker2_params.txt"
 
-ACCELEROMETER_FILE = "shaker1_accelerometer.csv_SETFILENAME"
+ACCELEROMETER_FILE = "shaker2_accelerometer.csv"
 
-TRACK_LEVEL = "shaker1_level.txtSETFILENAME"
+TRACK_LEVEL = "shaker2_level.txt"
 
 SETTINGS_com_bubble = {
     'img_processing':   {
@@ -31,7 +31,7 @@ SETTINGS_com_bubble = {
         'blur_kernel': 9
     },
     'shaker_settings':  {
-        'initial_duty': 685,
+        'initial_duty': 610,
         'measure_duty': 560,
         'wait_time': 0,
         'measure_time': 0,
@@ -47,11 +47,12 @@ SETTINGS_com_balls = {
         'blur_kernel': 3
     },
     'shaker_settings':  {
-        'initial_duty': 650,
-        'measure_duty': 560,
-        'wait_time': 5,
-        'measure_time': 10,
-        'ramp_time': 10
+        'initial_duty': 550,
+        'measure_duty': 550,
+        'move_duty': 550, #duty cycle during movement, set to None to avoid using
+        'wait_time': 5, #time at the top of the ramp
+        'ramp_time': 0,  #length of ramp
+        'measure_time': 5, #time after ramp before measuring
     }
 }
 
@@ -82,3 +83,4 @@ def update_settings_file(motor_pos=None, motor_limits=None, motor_pts=None, boun
         f.write(json.dumps(settings))
 
     return settings
+
