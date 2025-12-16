@@ -269,5 +269,7 @@ if __name__ == "__main__":
         string = 'i{:03}'.format(val)
         self.power.send_serial_line(string)
         self._clear_buffer()
-
+    #random
+    
     """
+    
