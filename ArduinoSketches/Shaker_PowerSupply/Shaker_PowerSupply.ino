@@ -1,4 +1,4 @@
-/*CONTROL SYSTEM FOR MOTOR WITH PHASE CONTROL
+/*CONTROL SYSTEM FOR SHAKER POWER SUPPLY
   This program uses Output Compare interrupts OCR1A and OCR1B to set phase control,
   such that AC power is turned on when OCR1B is reached, and turned off when OCR1A is
   reached. This function occurs every half cycle using digital pin 3 to trigger an interrupt
@@ -9,7 +9,7 @@
   with the processIncomingByte function, before interpreting them in the process_data function. This
   process discards any command that exceeds the buffer limit set by MAX_INPUT.
     
-  Edited by e - 2025/07/07
+  Edited by Mike - 2026/03/31
   */
 
 
